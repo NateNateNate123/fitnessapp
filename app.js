@@ -231,3 +231,38 @@ fetch("programs.json")
     loadProgress();
     updateUnitLabels();
   });
+// Save weight + body fat logs
+function saveBodyLog() {
+  const weight = document.getElementById("weight-input").value;
+  const bodyFat = document.getElementById("bodyfat-input").value;
+
+  if (!weight && !bodyFat) return;
+
+  const logs = JSON.parse(localStorage.getItem("bodyLogs") || "[]");
+  logs.push({
+    date: new Date().toLocaleDateString(),
+    weight,
+    bodyFat
+  });
+  localStorage.setItem("bodyLogs", JSON.stringify(logs));
+
+  document.getElementById("weight-input").value = "";
+  document.getElementById("bodyfat-input").value = "";
+  renderBodyLogs();
+}
+
+// Render weight/body fat history
+function renderBodyLogs() {
+  const container = document.getElementById("body-log-history");
+  container.innerHTML = "";
+
+  const logs = JSON.parse(localStorage.getItem("bodyLogs") || "[]");
+  logs.slice(-5).reverse().forEach(log => {
+    const entry = document.createElement("p");
+    entry.textContent = `${log.date} - Weight: ${log.weight || "-"} ${unitSystem}, Body Fat: ${log.bodyFat || "-"}%`;
+    container.appendChild(entry);
+  });
+}
+
+// Call on load
+document.addEventListener("DOMContentLoaded", renderBodyLogs);
