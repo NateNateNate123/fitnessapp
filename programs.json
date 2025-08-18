@@ -1,86 +1,94 @@
 {
-  "UpperLower": {
-    "workouts": {
-      "Upper A": [
-        { "name": "Bench Press", "muscle": "Chest" },
-        { "name": "Bent Over Row", "muscle": "Back" },
-        { "name": "Overhead Press", "muscle": "Shoulders" },
-        { "name": "Incline DB Press", "muscle": "Chest" },
-        { "name": "Lat Pulldown", "muscle": "Back" },
-        { "name": "Lateral Raise", "muscle": "Shoulders" },
-        { "name": "Triceps Pushdown", "muscle": "Triceps" },
-        { "name": "Cable Curl", "muscle": "Biceps" }
-      ],
-      "Lower A": [
-        { "name": "Back Squat", "muscle": "Quads" },
-        { "name": "Romanian Deadlift", "muscle": "Hamstrings" },
-        { "name": "Leg Press", "muscle": "Quads" },
-        { "name": "Leg Curl", "muscle": "Hamstrings" },
-        { "name": "Calf Raise", "muscle": "Calves" },
-        { "name": "Hanging Leg Raise", "muscle": "Abs" }
-      ],
-      "Upper B": [
-        { "name": "Weighted Pull-up", "muscle": "Back" },
-        { "name": "Flat DB Press", "muscle": "Chest" },
-        { "name": "Seated Cable Row", "muscle": "Back" },
-        { "name": "Arnold Press", "muscle": "Shoulders" },
-        { "name": "Chest Fly", "muscle": "Chest" },
-        { "name": "Hammer Curl", "muscle": "Biceps" },
-        { "name": "Skullcrusher", "muscle": "Triceps" }
-      ],
-      "Lower B": [
-        { "name": "Deadlift", "muscle": "Back" },
-        { "name": "Front Squat", "muscle": "Quads" },
-        { "name": "Hip Thrust", "muscle": "Glutes" },
-        { "name": "Leg Extension", "muscle": "Quads" },
-        { "name": "Calf Raise", "muscle": "Calves" },
-        { "name": "Cable Crunch", "muscle": "Abs" }
-      ]
-    }
+  "user": {
+    "units": "kg",
+    "bodyweight": [],
+    "bodyfat": []
   },
-  "PPL": {
-    "workouts": {
-      "Push": [
-        { "name": "Bench Press", "muscle": "Chest" },
-        { "name": "Overhead Press", "muscle": "Shoulders" },
-        { "name": "Incline Press", "muscle": "Chest" },
-        { "name": "Lateral Raise", "muscle": "Shoulders" },
-        { "name": "Triceps Rope", "muscle": "Triceps" }
-      ],
-      "Pull": [
-        { "name": "Barbell Row", "muscle": "Back" },
-        { "name": "Lat Pulldown", "muscle": "Back" },
-        { "name": "Face Pull", "muscle": "Rear Delts" },
-        { "name": "EZ Bar Curl", "muscle": "Biceps" },
-        { "name": "Hammer Curl", "muscle": "Biceps" }
-      ],
-      "Legs": [
-        { "name": "Back Squat", "muscle": "Quads" },
-        { "name": "Romanian Deadlift", "muscle": "Hamstrings" },
-        { "name": "Leg Press", "muscle": "Quads" },
-        { "name": "Leg Curl", "muscle": "Hamstrings" },
-        { "name": "Calf Raise", "muscle": "Calves" }
+  "programs": [
+    {
+      "name": "Full Body",
+      "days": [
+        {
+          "day": "Day 1",
+          "exercises": [
+            { "name": "Barbell Squat", "muscle": "Legs", "sets": 4, "reps": "6-10" },
+            { "name": "Bench Press", "muscle": "Chest", "sets": 4, "reps": "6-10" },
+            { "name": "Barbell Row", "muscle": "Back", "sets": 4, "reps": "6-10" },
+            { "name": "Overhead Press", "muscle": "Shoulders", "sets": 3, "reps": "8-12" },
+            { "name": "Barbell Curl", "muscle": "Biceps", "sets": 3, "reps": "10-12" },
+            { "name": "Skullcrusher", "muscle": "Triceps", "sets": 3, "reps": "10-12" }
+          ]
+        },
+        {
+          "day": "Day 2",
+          "exercises": [
+            { "name": "Deadlift", "muscle": "Back/Legs", "sets": 3, "reps": "4-6" },
+            { "name": "Incline Dumbbell Press", "muscle": "Chest", "sets": 3, "reps": "8-10" },
+            { "name": "Pull-Ups", "muscle": "Back", "sets": 3, "reps": "Max" },
+            { "name": "Lateral Raises", "muscle": "Shoulders", "sets": 3, "reps": "12-15" },
+            { "name": "Hammer Curls", "muscle": "Biceps", "sets": 3, "reps": "10-12" },
+            { "name": "Overhead Tricep Extension", "muscle": "Triceps", "sets": 3, "reps": "10-12" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Push Pull Legs",
+      "days": [
+        {
+          "day": "Push",
+          "exercises": [
+            { "name": "Bench Press", "muscle": "Chest", "sets": 4, "reps": "6-10" },
+            { "name": "Overhead Press", "muscle": "Shoulders", "sets": 4, "reps": "6-10" },
+            { "name": "Incline Dumbbell Press", "muscle": "Chest", "sets": 3, "reps": "8-10" },
+            { "name": "Lateral Raises", "muscle": "Shoulders", "sets": 3, "reps": "12-15" },
+            { "name": "Skullcrushers", "muscle": "Triceps", "sets": 3, "reps": "10-12" }
+          ]
+        },
+        {
+          "day": "Pull",
+          "exercises": [
+            { "name": "Barbell Row", "muscle": "Back", "sets": 4, "reps": "6-10" },
+            { "name": "Pull-Ups", "muscle": "Back", "sets": 4, "reps": "Max" },
+            { "name": "Face Pulls", "muscle": "Rear Delts", "sets": 3, "reps": "12-15" },
+            { "name": "Barbell Curls", "muscle": "Biceps", "sets": 3, "reps": "10-12" },
+            { "name": "Hammer Curls", "muscle": "Biceps", "sets": 3, "reps": "10-12" }
+          ]
+        },
+        {
+          "day": "Legs",
+          "exercises": [
+            { "name": "Barbell Squat", "muscle": "Legs", "sets": 4, "reps": "6-10" },
+            { "name": "Romanian Deadlift", "muscle": "Hamstrings", "sets": 4, "reps": "6-10" },
+            { "name": "Leg Press", "muscle": "Quads/Glutes", "sets": 3, "reps": "8-12" },
+            { "name": "Calf Raises", "muscle": "Calves", "sets": 4, "reps": "12-15" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Upper Lower",
+      "days": [
+        {
+          "day": "Upper",
+          "exercises": [
+            { "name": "Bench Press", "muscle": "Chest", "sets": 4, "reps": "6-10" },
+            { "name": "Barbell Row", "muscle": "Back", "sets": 4, "reps": "6-10" },
+            { "name": "Overhead Press", "muscle": "Shoulders", "sets": 3, "reps": "8-10" },
+            { "name": "Barbell Curl", "muscle": "Biceps", "sets": 3, "reps": "10-12" },
+            { "name": "Skullcrusher", "muscle": "Triceps", "sets": 3, "reps": "10-12" }
+          ]
+        },
+        {
+          "day": "Lower",
+          "exercises": [
+            { "name": "Squat", "muscle": "Legs", "sets": 4, "reps": "6-10" },
+            { "name": "Deadlift", "muscle": "Back/Legs", "sets": 3, "reps": "4-6" },
+            { "name": "Lunges", "muscle": "Legs", "sets": 3, "reps": "10-12 each leg" },
+            { "name": "Calf Raises", "muscle": "Calves", "sets": 4, "reps": "12-15" }
+          ]
+        }
       ]
     }
-  },
-  "FullBody": {
-    "workouts": {
-      "Full A": [
-        { "name": "Squat", "muscle": "Quads" },
-        { "name": "Bench Press", "muscle": "Chest" },
-        { "name": "Row", "muscle": "Back" },
-        { "name": "Lateral Raise", "muscle": "Shoulders" },
-        { "name": "Curl", "muscle": "Biceps" },
-        { "name": "Triceps Pushdown", "muscle": "Triceps" }
-      ],
-      "Full B": [
-        { "name": "Deadlift", "muscle": "Back" },
-        { "name": "Overhead Press", "muscle": "Shoulders" },
-        { "name": "Pulldown", "muscle": "Back" },
-        { "name": "Leg Press", "muscle": "Quads" },
-        { "name": "Calf Raise", "muscle": "Calves" },
-        { "name": "Abs Wheel", "muscle": "Abs" }
-      ]
-    }
-  }
+  ]
 }
