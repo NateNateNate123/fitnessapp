@@ -1,46 +1,43 @@
-/* Base */
+/* Reset */
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background: #f9f9fb;
   margin: 0;
-  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: #f9f9fb;
   color: #1c1c1e;
 }
 
-/* Nav bar */
+/* Navbar */
 .navbar {
-  position: sticky;
-  top: 0;
-  background: white;
-  border-bottom: 1px solid #e5e5ea;
-  padding: 1rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  z-index: 100;
+  padding: 1rem;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e5ea;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .navbar h1 {
-  font-size: 1.4rem;
+  margin: 0;
+  font-size: 1.3rem;
   font-weight: 700;
   color: #007aff;
-  margin: 0;
 }
 
 .navbar nav a {
   margin-left: 1rem;
   text-decoration: none;
-  font-weight: 500;
   color: #8e8e93;
+  font-weight: 500;
 }
 
 .navbar nav a.active {
   color: #007aff;
-  border-bottom: 2px solid #007aff;
-  padding-bottom: 2px;
 }
 
-/* Page layout */
+/* Page content */
 .page {
   display: none;
   padding: 1rem;
@@ -53,80 +50,167 @@ body {
 /* Cards */
 .card {
   background: #fff;
-  border-radius: 18px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+  border-radius: 16px;
   padding: 1rem;
-  margin-bottom: 1.2rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
 }
 
 .card h2 {
-  font-size: 1.2rem;
-  color: #007aff;
-  margin: 0 0 0.5rem;
+  margin-top: 0;
 }
 
+/* Workout structure */
 .day {
-  margin-top: 1rem;
-  padding-top: 0.5rem;
-  border-top: 1px solid #f0f0f5;
+  margin-bottom: 1rem;
 }
 
 .day h3 {
   margin: 0.5rem 0;
-  font-size: 1.1rem;
-  font-weight: 600;
-}
-
-.muscle h4 {
-  margin: 0.25rem 0;
-  font-size: 1rem;
   color: #007aff;
 }
 
-.muscle ul {
-  margin: 0;
-  padding-left: 1.25rem;
-  list-style-type: disc;
+.muscle h4 {
+  margin: 0.5rem 0;
+  font-size: 1rem;
 }
 
-/* Buttons */
+ul {
+  list-style: none;
+  padding: 0;
+}
+
+li {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.3rem;
+}
+
+li span {
+  flex: 1;
+}
+
+.exercise-check {
+  margin-right: 0.5rem;
+}
+
+.weight-input {
+  width: 60px;
+  margin-left: 0.5rem;
+  padding: 0.2rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+/* Done button */
 .done-btn {
-  margin-top: 0.7rem;
-  padding: 0.5rem 1rem;
+  margin-top: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  border: none;
+  border-radius: 8px;
   background: #007aff;
   color: white;
-  border: none;
-  border-radius: 12px;
   cursor: pointer;
   font-size: 0.9rem;
-  transition: background 0.3s ease;
 }
 
 .done-btn:hover {
-  background: #005bb5;
+  background: #005bbb;
 }
 
 .completed {
   opacity: 0.6;
 }
 
-/* Rest reminder banner */
+/* Rest reminder */
 .rest-reminder {
   position: fixed;
-  top: -60px;
+  bottom: -60px;
   left: 50%;
   transform: translateX(-50%);
   background: #ff3b30;
   color: white;
-  padding: 1rem 2rem;
+  padding: 0.7rem 1rem;
   border-radius: 12px;
-  font-size: 1rem;
-  font-weight: bold;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-  transition: top 0.5s ease;
-  z-index: 1000;
+  font-size: 0.9rem;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  transition: bottom 0.5s ease;
 }
 
 .rest-reminder.show {
-  top: 20px;
+  bottom: 20px;
+}
+
+/* Unit toggle */
+#unit-toggle {
+  margin: 1rem 0;
+  padding: 0.5rem 1rem;
+  background: #34c759;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+/* Progress tab */
+#progress-content {
+  margin-top: 1rem;
+}
+
+#progress-content h3 {
+  margin-top: 1rem;
+  color: #007aff;
+}
+
+/* History */
+.history-entry {
+  border-bottom: 1px solid #e5e5ea;
+  padding: 0.5rem 0;
+}
+
+.history-summary {
+  font-weight: 600;
+  cursor: pointer;
+  margin: 0;
+  color: #1c1c1e;
+}
+
+.history-summary:hover {
+  color: #007aff;
+}
+
+.history-details {
+  display: none;
+  margin-left: 1rem;
+  color: #555;
+}
+
+.history-details.show {
+  display: block;
+}
+
+/* Weight/Body Fat log */
+#body-log {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+#body-log input {
+  margin-right: 0.5rem;
+  padding: 0.3rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+#body-log button {
+  padding: 0.4rem 0.8rem;
+  background: #ff9500;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
 }
