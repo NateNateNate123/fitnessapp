@@ -1,51 +1,45 @@
-:root{
-  --bg:#0b0b0f; --card:#12131a; --muted:#8c90a3; --text:#e8ebff;
-  --accent:#5b8cff; --accent-2:#8f95ff; --sep:#1f2230; --ok:#20c997; --warn:#ffd166;
-  --radius:18px;
-  font-synthesis-weight:none;
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  margin: 0;
+  padding: 0;
+  background: #f9f9f9;
+  color: #111;
 }
-@supports (font: -apple-system-body) {
-  :root { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, Roboto, "Segoe UI", "Helvetica Neue", Arial, sans-serif; }
+
+header {
+  background: #fff;
+  padding: 1rem;
+  text-align: center;
+  font-weight: bold;
+  border-bottom: 1px solid #ddd;
 }
-*{box-sizing:border-box}
-html,body{height:100%}
-body{margin:0;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
-.app{display:flex;flex-direction:column;height:100vh}
-.safe-bottom{padding-bottom: env(safe-area-inset-bottom)}
-.nav{position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(11,11,15,0.7);backdrop-filter:saturate(140%) blur(14px);border-bottom:1px solid var(--sep)}
-.nav-title{font-weight:700;letter-spacing:.2px}
-.icon-btn{appearance:none;background:#1a1b25;border:1px solid var(--sep);color:var(--text);border-radius:12px;padding:6px 10px}
-.view{flex:1;overflow:auto;padding:16px 16px 88px}
-.stack{display:grid;gap:14px}
-.card{background:var(--card);border:1px solid var(--sep);border-radius:var(--radius);padding:14px 14px}
-.card-title{margin:4px 0 12px;font-size:16px}
-.list{display:grid;gap:10px}
-.row{display:flex;align-items:center}
-.row.gap{gap:10px;flex-wrap:wrap}
-.btn{appearance:none;border:1px solid var(--sep);background:#191b24;color:var(--text);padding:10px 12px;border-radius:12px}
-.btn.primary{background:linear-gradient(180deg,var(--accent),var(--accent-2));border:none;color:white}
-.btn:active{transform:translateY(1px)}
-.segmented{display:flex;gap:8px;flex-wrap:wrap}
-.segmented button{padding:8px 10px;border-radius:999px;border:1px solid var(--sep);background:#161823;color:var(--text)}
-.segmented button.active{background:var(--accent);color:#fff;border-color:transparent}
-.search{width:100%;padding:10px 12px;border-radius:12px;border:1px solid var(--sep);background:#0f1118;color:var(--text)}
-.chips{display:flex;gap:8px;flex-wrap:wrap}
-.chips .chip{padding:8px 10px;border:1px solid var(--sep);border-radius:999px;background:#161823;color:var(--text)}
-.item{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:12px;border:1px solid var(--sep);background:#0f1118;border-radius:12px}
-.item h3{margin:0;font-size:15px}
-.item .sub{color:var(--muted);font-size:12px}
-.badge{font-size:12px;color:#fff;background:#2a2f44;border-radius:999px;padding:2px 8px}
-.tabbar{position:fixed;bottom:0;left:0;right:0;display:flex;gap:4px;justify-content:space-around;background:rgba(11,11,15,0.75);backdrop-filter:blur(12px);border-top:1px solid var(--sep);padding:8px 6px}
-.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 2px;border-radius:10px;border:0;background:transparent;color:var(--muted)}
-.tab.active{color:#fff;background:#151826}
-.tab span{font-size:11px}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-label{display:grid;gap:6px;font-size:13px}
-input, select{appearance:none;background:#0f1118;color:var(--text);border:1px solid var(--sep);border-radius:12px;padding:10px}
-.switch-row{align-items:center}
-.timer{margin-top:10px;font-weight:700;text-align:center}
-.muted{color:var(--muted)}
-.mt{margin-top:16px}
-.streaks{display:flex;gap:8px;flex-wrap:wrap}
-.streaks .badge{background:linear-gradient(180deg,var(--ok),#159d79)}
-.empty{color:var(--muted);text-align:center;padding:12px}
+
+main {
+  padding: 1rem;
+}
+
+section {
+  margin-bottom: 2rem;
+}
+
+button {
+  background: #007aff;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 0.8rem 1.2rem;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #005bb5;
+}
+
+.exercise-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1rem;
+  margin: 0.5rem 0;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
