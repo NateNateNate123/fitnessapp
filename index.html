@@ -22,12 +22,20 @@
     <div id="workout-list"></div>
   </div>
 
-  <!-- Progress Page -->
-  <div id="progress" class="page">
-    <h2>Your Progress</h2>
-    <p>Coming soon... track completed workouts, streaks, and personal records.</p>
+</html>
+<!-- Progress Page -->
+<div id="progress" class="page">
+  <h2>Your Progress</h2>
+  
+  <!-- Body log section -->
+  <div id="body-log">
+    <h3>Body Stats</h3>
+    <input type="number" id="weight-input" placeholder="Weight">
+    <input type="number" id="bodyfat-input" placeholder="Body Fat %">
+    <button onclick="saveBodyLog()">Log</button>
+    <div id="body-log-history"></div>
   </div>
 
-  <script src="app.js"></script>
-</body>
-</html>
+  <!-- Workout logs -->
+  <div id="progress-content"></div>
+</div>
