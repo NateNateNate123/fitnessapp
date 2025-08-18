@@ -1,44 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>FitnessApp</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <header>
+  <!-- NavBar -->
+  <div class="navbar">
     <h1>FitnessApp</h1>
-  </header>
+    <nav>
+      <a href="#" class="active" onclick="showPage('workouts')">Workouts</a>
+      <a href="#" onclick="showPage('progress')">Progress</a>
+    </nav>
+  </div>
 
-  <nav class="tab-bar">
-    <button onclick="showPage('home')">Home</button>
-    <button onclick="showPage('workouts')">Workouts</button>
-    <button onclick="showPage('nutrition')">Nutrition</button>
-    <button onclick="showPage('progress')">Progress</button>
-  </nav>
+  <!-- Workouts Page -->
+  <div id="workouts" class="page active">
+    <h2>Workout Programs</h2>
+    <div id="workout-list"></div>
+  </div>
 
-  <main>
-    <section id="home" class="page active">
-      <h2>Welcome</h2>
-      <p>Your personal bodybuilding coach.</p>
-    </section>
-
-    <section id="workouts" class="page">
-      <h2>Workout Programs</h2>
-      <div id="workout-list"></div>
-    </section>
-
-    <section id="nutrition" class="page">
-      <h2>Nutrition</h2>
-      <p>Nutrition tips coming soon...</p>
-    </section>
-
-    <section id="progress" class="page">
-      <h2>Progress</h2>
-      <p>Track your gains here soon...</p>
-    </section>
-  </main>
+  <!-- Progress Page -->
+  <div id="progress" class="page">
+    <h2>Your Progress</h2>
+    <p>Coming soon... track completed workouts, streaks, and personal records.</p>
+  </div>
 
   <script src="app.js"></script>
 </body>
