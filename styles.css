@@ -1,40 +1,14 @@
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
-  background: #f8f8f8;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #f2f2f7;
   margin: 0;
   padding: 0;
-}
-
-header {
-  background: white;
-  text-align: center;
-  padding: 1rem;
-  font-size: 1.2rem;
-  font-weight: bold;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-}
-
-.tab-bar {
-  display: flex;
-  justify-content: space-around;
-  background: #fff;
-  border-top: 1px solid #ddd;
-  position: fixed;
-  bottom: 0;
-  width: 100%;
-  padding: 0.5rem 0;
-}
-
-.tab-bar button {
-  background: none;
-  border: none;
-  font-size: 1rem;
-  color: #007aff;
+  color: #1c1c1e;
 }
 
 .page {
   display: none;
-  padding: 2rem 1rem 5rem;
+  padding: 1rem;
 }
 
 .page.active {
@@ -44,25 +18,38 @@ header {
 .card {
   background: #fff;
   border-radius: 16px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
   padding: 1rem;
-  margin: 1rem 0;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  cursor: pointer;
+  margin-bottom: 1rem;
 }
 
-.card h3 {
+h2 {
+  margin-top: 0;
+  font-size: 1.4rem;
+  color: #007aff;
+}
+
+h3 {
+  margin: 0.5rem 0;
+  font-size: 1.2rem;
+  color: #1c1c1e;
+}
+
+h4 {
+  margin: 0.25rem 0;
+  font-size: 1rem;
+  color: #007aff;
+}
+
+ul {
   margin: 0;
-  font-size: 1.1rem;
+  padding-left: 1.25rem;
+  list-style-type: disc;
 }
 
-.exercise {
-  margin-top: 0.5rem;
-  padding-left: 1rem;
-  color: #555;
-}
 .day {
   margin-top: 1rem;
-  padding: 0.5rem;
+  padding-top: 0.5rem;
   border-top: 1px solid #ddd;
 }
 
@@ -71,14 +58,42 @@ header {
   margin-top: 0.5rem;
 }
 
-.muscle h4 {
-  margin: 0.25rem 0;
-  font-size: 1rem;
-  color: #007aff;
+.done-btn {
+  margin-top: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  background: #007aff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
 }
 
-.muscle ul {
-  margin: 0;
-  padding-left: 1.25rem;
-  list-style-type: disc;
+.done-btn:hover {
+  background: #005bb5;
+}
+
+.completed {
+  opacity: 0.6;
+}
+
+/* Rest reminder banner */
+.rest-reminder {
+  position: fixed;
+  top: -60px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #ff3b30;
+  color: white;
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: bold;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  transition: top 0.5s ease;
+  z-index: 1000;
+}
+
+.rest-reminder.show {
+  top: 20px;
 }
