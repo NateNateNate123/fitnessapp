@@ -1,27 +1,82 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>FitnessApp</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#ffffff" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <header>
-    <h1>FitnessApp</h1>
+  <header class="app-header">
+    <div class="title-wrap">
+      <h1>FitnessApp</h1>
+      <small class="subtle">by Nate</small>
+    </div>
+    <div class="actions">
+      <button id="unitToggle" class="chip">kg</button>
+      <button id="exportData" class="chip">Export</button>
+      <label class="chip filechip">Import
+        <input id="importData" type="file" accept="application/json" hidden />
+      </label>
+    </div>
   </header>
 
   <main>
-    <section id="program-select"></section>
-    <section id="day-select"></section>
-    <section id="exercise-list"></section>
-    <section id="progress-log"></section>
+    <section class="card">
+      <h2>Choose Program</h2>
+      <div id="program-select" class="button-row"></div>
+    </section>
+
+    <section class="card">
+      <h2>Choose Day</h2>
+      <div id="day-select" class="button-row"></div>
+    </section>
+
+    <section id="exercise-section" class="card">
+      <div class="row-between">
+        <h2>Exercises</h2>
+        <button id="startRest" class="ghost">⏱ Start Rest</button>
+      </div>
+      <div id="restTimer" class="rest">Rest: —</div>
+      <div id="exercise-list"></div>
+    </section>
+
+    <section class="card">
+      <h2>Body Stats</h2>
+      <div class="row">
+        <input id="bodyweightInput" type="number" inputmode="decimal" placeholder="Bodyweight" />
+        <input id="bodyfatInput" type="number" inputmode="decimal" placeholder="Body fat %" />
+        <button id="logBodyBtn">Log</button>
+      </div>
+      <div class="charts">
+        <canvas id="weightChart"></canvas>
+        <canvas id="fatChart"></canvas>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Exercise Progress</h2>
+      <div class="row">
+        <select id="exercisePicker"></select>
+        <button id="refreshExerciseChart">Show</button>
+      </div>
+      <canvas id="exerciseChart"></canvas>
+    </section>
   </main>
 
-  <footer>
-    <button id="log-body-btn">Log Bodyweight / Bodyfat</button>
+  <footer class="app-footer">
+    <span>Tip: Add to Home Screen on iPhone for app mode.</span>
   </footer>
 
   <script src="app.js"></script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("sw.js");
+    }
+  </script>
 </body>
 </html>
