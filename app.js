@@ -3,7 +3,27 @@ function showPage(pageId) {
   document.getElementById(pageId).classList.add('active');
 }
 
-// Load workouts from JSON and display all at once
+// Track streak of consecutive completed days
+let workoutStreak = 0;
+
+// Function to show rest reminder banner
+function showRestReminder(message) {
+  const reminder = document.createElement("div");
+  reminder.className = "rest-reminder";
+  reminder.textContent = message;
+
+  document.body.appendChild(reminder);
+
+  // Slide in
+  setTimeout(() => reminder.classList.add("show"), 100);
+
+  // Slide out after 4s
+  setTimeout(() => {
+    reminder.classList.remove("show");
+    setTimeout(() => reminder.remove(), 500);
+  }, 4000);
+}
+
 fetch("programs.json")
   .then(res => res.json())
   .then(data => {
@@ -36,6 +56,27 @@ fetch("programs.json")
           muscleDiv.appendChild(exList);
           dayDiv.appendChild(muscleDiv);
         });
+
+        // Add "Mark as Done" button
+        const doneBtn = document.createElement("button");
+        doneBtn.className = "done-btn";
+        doneBtn.textContent = "✔ Mark as Done";
+        doneBtn.onclick = () => {
+          const isCompleted = dayDiv.classList.toggle("completed");
+          if (isCompleted) {
+            workoutStreak++;
+            doneBtn.textContent = "✅ Completed";
+
+            // Rest reminder if streak gets high
+            if (workoutStreak >= 3) {
+              showRestReminder("⚠️ Nate, you've trained 3 days in a row. Take a rest day 💪");
+            }
+          } else {
+            workoutStreak = Math.max(0, workoutStreak - 1);
+            doneBtn.textContent = "✔ Mark as Done";
+          }
+        };
+        dayDiv.appendChild(doneBtn);
 
         splitDiv.appendChild(dayDiv);
       });
