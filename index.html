@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pure Bodybuilding — Coach</title>
+
+  <!-- iPhone PWA bits -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="PB Coach" />
+  <meta name="theme-color" content="#0f1115" />
+  <link rel="apple-touch-icon" href="icon-180.png" />
+  <link rel="manifest" href="manifest.json" />
+
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">🏋️‍♂️ Pure Bodybuilding — Coach</div>
+    <nav class="tabs">
+      <button data-tab="program" class="active">Program</button>
+      <button data-tab="workout">Workout</button>
+      <button data-tab="log">Log</button>
+      <button data-tab="library">Library</button>
+      <button data-tab="resources">Resources</button>
+      <button data-tab="settings">Settings</button>
+    </nav>
+  </header>
+
+  <main id="view"></main>
+
+  <footer class="footer">
+    <span>Made for Nate • Works offline • Add to Home Screen</span>
+  </footer>
+
+  <!-- SheetJS to parse your Excel files in-browser -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.19.3/dist/xlsx.full.min.js"></script>
+  <script src="app.js"></script>
+  <script src="service-worker-ready.js"></script>
+</body>
+</html>
