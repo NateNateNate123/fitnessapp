@@ -1,10 +1,8 @@
 {
   "name": "fitnessapp",
   "version": "1.0.0",
-  "description": "My fitness app with workout splits",
-  "main": "app.js",
+  "private": true,
   "scripts": {
-    "start": "npx serve ."
-  },
-  "dependencies": {}
+    "start": "serve -p 54322"
+  }
 }
