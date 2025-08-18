@@ -56,7 +56,7 @@ body {
   box-shadow: 0 4px 10px rgba(0,0,0,0.05);
 }
 
-.card h2 {
+.card h2, .card h3 {
   margin-top: 0;
 }
 
