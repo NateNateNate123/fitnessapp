@@ -1,41 +1,57 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FitnessApp</title>
-  <link rel="stylesheet" href="styles.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fitness App</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <!-- NavBar -->
+  <!-- Navbar -->
   <div class="navbar">
     <h1>FitnessApp</h1>
     <nav>
-      <a href="#" class="active" onclick="showPage('workouts')">Workouts</a>
+      <a href="#" onclick="showPage('workouts')">Workouts</a>
       <a href="#" onclick="showPage('progress')">Progress</a>
+      <a href="#" id="unit-toggle" onclick="toggleUnit()">Switch to lbs</a>
     </nav>
   </div>
 
   <!-- Workouts Page -->
   <div id="workouts" class="page active">
-    <h2>Workout Programs</h2>
+    <h2>Workout Splits</h2>
     <div id="workout-list"></div>
   </div>
 
-</html>
-<!-- Progress Page -->
-<div id="progress" class="page">
-  <h2>Your Progress</h2>
-  
-  <!-- Body log section -->
-  <div id="body-log">
-    <h3>Body Stats</h3>
-    <input type="number" id="weight-input" placeholder="Weight">
-    <input type="number" id="bodyfat-input" placeholder="Body Fat %">
-    <button onclick="saveBodyLog()">Log</button>
-    <div id="body-log-history"></div>
+  <!-- Progress Page -->
+  <div id="progress" class="page">
+    <h2>Your Progress</h2>
+    
+    <!-- Body log section -->
+    <div id="body-log">
+      <h3>Body Stats</h3>
+      <input type="number" id="weight-input" placeholder="Weight">
+      <input type="number" id="bodyfat-input" placeholder="Body Fat %">
+      <button onclick="saveBodyLog()">Log</button>
+      <div id="body-log-history"></div>
+    </div>
+
+    <!-- Charts -->
+    <div class="card">
+      <h3>Weight Progress</h3>
+      <canvas id="weightChart"></canvas>
+    </div>
+    
+    <div class="card">
+      <h3>Body Fat Progress</h3>
+      <canvas id="bodyFatChart"></canvas>
+    </div>
+
+    <!-- Workout logs -->
+    <div id="progress-content"></div>
   </div>
 
-  <!-- Workout logs -->
-  <div id="progress-content"></div>
-</div>
+  <script src="app.js"></script>
+</body>
+</html>
