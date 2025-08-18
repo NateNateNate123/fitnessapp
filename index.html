@@ -1,57 +1,56 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fitness App</title>
-  <link rel="stylesheet" href="styles.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FitnessApp</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <!-- Navbar -->
-  <div class="navbar">
+  <header>
     <h1>FitnessApp</h1>
-    <nav>
-      <a href="#" onclick="showPage('workouts')">Workouts</a>
-      <a href="#" onclick="showPage('progress')">Progress</a>
-      <a href="#" id="unit-toggle" onclick="toggleUnit()">Switch to lbs</a>
-    </nav>
-  </div>
+  </header>
 
-  <!-- Workouts Page -->
-  <div id="workouts" class="page active">
-    <h2>Workout Splits</h2>
-    <div id="workout-list"></div>
-  </div>
+  <nav>
+    <button onclick="showPage('workouts')">Workouts</button>
+    <button onclick="showPage('log')">Log</button>
+    <button onclick="showPage('stats')">Stats</button>
+  </nav>
 
-  <!-- Progress Page -->
-  <div id="progress" class="page">
-    <h2>Your Progress</h2>
-    
-    <!-- Body log section -->
-    <div id="body-log">
-      <h3>Body Stats</h3>
-      <input type="number" id="weight-input" placeholder="Weight">
-      <input type="number" id="bodyfat-input" placeholder="Body Fat %">
-      <button onclick="saveBodyLog()">Log</button>
-      <div id="body-log-history"></div>
-    </div>
+  <main>
+    <section id="workouts" class="page">
+      <h2>Workout Splits</h2>
+      <div id="workout-list"></div>
+    </section>
 
-    <!-- Charts -->
-    <div class="card">
-      <h3>Weight Progress</h3>
+    <section id="log" class="page hidden">
+      <h2>Workout Log</h2>
+      <label>Exercise: <input id="exercise-name" placeholder="Bench Press" /></label>
+      <label>Weight: <input id="exercise-weight" type="number" /></label>
+      <select id="unit">
+        <option value="kg">kg</option>
+        <option value="lbs">lbs</option>
+      </select>
+      <label>Reps: <input id="exercise-reps" type="number" /></label>
+      <button onclick="saveLog()">Save</button>
+      <ul id="log-list"></ul>
+    </section>
+
+    <section id="stats" class="page hidden">
+      <h2>Body Stats</h2>
+      <label>Weight: <input id="body-weight" type="number" /></label>
+      <select id="body-unit">
+        <option value="kg">kg</option>
+        <option value="lbs">lbs</option>
+      </select>
+      <label>Body Fat %: <input id="body-fat" type="number" /></label>
+      <button onclick="saveBodyStats()">Save</button>
       <canvas id="weightChart"></canvas>
-    </div>
-    
-    <div class="card">
-      <h3>Body Fat Progress</h3>
-      <canvas id="bodyFatChart"></canvas>
-    </div>
+      <canvas id="fatChart"></canvas>
+    </section>
+  </main>
 
-    <!-- Workout logs -->
-    <div id="progress-content"></div>
-  </div>
-
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
