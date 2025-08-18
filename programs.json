@@ -1,9 +1,5 @@
 {
-  "user": {
-    "units": "kg",
-    "bodyweight": [],
-    "bodyfat": []
-  },
+  "user": { "units": "kg", "bodyweight": [], "bodyfat": [] },
   "programs": [
     {
       "name": "Full Body",
