@@ -1,57 +1,86 @@
 {
-  "Full Body": {
-    "Day 1": {
-      "Chest": ["Barbell Bench Press - 4x8", "Incline Dumbbell Press - 3x10"],
-      "Back": ["Barbell Row - 4x8", "Lat Pulldown - 3x12"],
-      "Legs": ["Back Squat - 4x6", "Leg Press - 3x10"],
-      "Shoulders": ["Overhead Press - 3x8", "Lateral Raise - 3x12"],
-      "Arms": ["Barbell Curl - 3x10", "Triceps Pushdown - 3x12"]
-    },
-    "Day 2": {
-      "Chest": ["Dumbbell Bench Press - 4x8", "Incline Barbell Press - 3x10"],
-      "Back": ["Pull-Ups - 4xMax", "Seated Row - 3x12"],
-      "Legs": ["Romanian Deadlift - 4x8", "Lunges - 3x10"],
-      "Shoulders": ["Arnold Press - 3x10", "Face Pulls - 3x15"],
-      "Arms": ["Hammer Curl - 3x10", "Overhead Triceps Extension - 3x12"]
-    },
-    "Day 3": {
-      "Chest": ["Cable Fly - 3x15", "Dips - 3xMax"],
-      "Back": ["T-Bar Row - 4x8", "Chin-Ups - 3xMax"],
-      "Legs": ["Front Squat - 4x6", "Leg Curl - 3x12"],
-      "Shoulders": ["Machine Shoulder Press - 3x10", "Rear Delt Fly - 3x15"],
-      "Arms": ["Preacher Curl - 3x10", "Skull Crushers - 3x12"]
+  "UpperLower": {
+    "workouts": {
+      "Upper A": [
+        { "name": "Bench Press", "muscle": "Chest" },
+        { "name": "Bent Over Row", "muscle": "Back" },
+        { "name": "Overhead Press", "muscle": "Shoulders" },
+        { "name": "Incline DB Press", "muscle": "Chest" },
+        { "name": "Lat Pulldown", "muscle": "Back" },
+        { "name": "Lateral Raise", "muscle": "Shoulders" },
+        { "name": "Triceps Pushdown", "muscle": "Triceps" },
+        { "name": "Cable Curl", "muscle": "Biceps" }
+      ],
+      "Lower A": [
+        { "name": "Back Squat", "muscle": "Quads" },
+        { "name": "Romanian Deadlift", "muscle": "Hamstrings" },
+        { "name": "Leg Press", "muscle": "Quads" },
+        { "name": "Leg Curl", "muscle": "Hamstrings" },
+        { "name": "Calf Raise", "muscle": "Calves" },
+        { "name": "Hanging Leg Raise", "muscle": "Abs" }
+      ],
+      "Upper B": [
+        { "name": "Weighted Pull-up", "muscle": "Back" },
+        { "name": "Flat DB Press", "muscle": "Chest" },
+        { "name": "Seated Cable Row", "muscle": "Back" },
+        { "name": "Arnold Press", "muscle": "Shoulders" },
+        { "name": "Chest Fly", "muscle": "Chest" },
+        { "name": "Hammer Curl", "muscle": "Biceps" },
+        { "name": "Skullcrusher", "muscle": "Triceps" }
+      ],
+      "Lower B": [
+        { "name": "Deadlift", "muscle": "Back" },
+        { "name": "Front Squat", "muscle": "Quads" },
+        { "name": "Hip Thrust", "muscle": "Glutes" },
+        { "name": "Leg Extension", "muscle": "Quads" },
+        { "name": "Calf Raise", "muscle": "Calves" },
+        { "name": "Cable Crunch", "muscle": "Abs" }
+      ]
     }
   },
   "PPL": {
-    "Push": {
-      "Chest": ["Flat Barbell Bench Press - 4x8", "Incline Dumbbell Press - 3x10"],
-      "Shoulders": ["Overhead Press - 4x8", "Lateral Raise - 3x12"],
-      "Triceps": ["Close-Grip Bench Press - 3x8", "Triceps Rope Pushdown - 3x12"]
-    },
-    "Pull": {
-      "Back": ["Pull-Ups - 4xMax", "Barbell Row - 4x8", "Seated Cable Row - 3x12"],
-      "Rear Delts": ["Face Pulls - 3x15", "Reverse Fly - 3x12"],
-      "Biceps": ["Barbell Curl - 3x10", "Incline Dumbbell Curl - 3x12"]
-    },
-    "Legs": {
-      "Quads": ["Back Squat - 4x6", "Leg Press - 3x10"],
-      "Hamstrings": ["Romanian Deadlift - 4x8", "Lying Leg Curl - 3x12"],
-      "Glutes": ["Hip Thrust - 4x8", "Bulgarian Split Squat - 3x10"],
-      "Calves": ["Standing Calf Raise - 4x15", "Seated Calf Raise - 4x15"]
+    "workouts": {
+      "Push": [
+        { "name": "Bench Press", "muscle": "Chest" },
+        { "name": "Overhead Press", "muscle": "Shoulders" },
+        { "name": "Incline Press", "muscle": "Chest" },
+        { "name": "Lateral Raise", "muscle": "Shoulders" },
+        { "name": "Triceps Rope", "muscle": "Triceps" }
+      ],
+      "Pull": [
+        { "name": "Barbell Row", "muscle": "Back" },
+        { "name": "Lat Pulldown", "muscle": "Back" },
+        { "name": "Face Pull", "muscle": "Rear Delts" },
+        { "name": "EZ Bar Curl", "muscle": "Biceps" },
+        { "name": "Hammer Curl", "muscle": "Biceps" }
+      ],
+      "Legs": [
+        { "name": "Back Squat", "muscle": "Quads" },
+        { "name": "Romanian Deadlift", "muscle": "Hamstrings" },
+        { "name": "Leg Press", "muscle": "Quads" },
+        { "name": "Leg Curl", "muscle": "Hamstrings" },
+        { "name": "Calf Raise", "muscle": "Calves" }
+      ]
     }
   },
-  "Upper Lower": {
-    "Upper": {
-      "Chest": ["Incline Barbell Press - 4x8", "Dumbbell Bench Press - 3x10"],
-      "Back": ["Pull-Ups - 4xMax", "Barbell Row - 4x8"],
-      "Shoulders": ["Overhead Press - 3x8", "Lateral Raise - 3x12"],
-      "Arms": ["Barbell Curl - 3x10", "Skull Crushers - 3x12"]
-    },
-    "Lower": {
-      "Quads": ["Back Squat - 4x6", "Leg Extension - 3x12"],
-      "Hamstrings": ["Romanian Deadlift - 4x8", "Leg Curl - 3x12"],
-      "Glutes": ["Hip Thrust - 4x8", "Walking Lunge - 3x10"],
-      "Calves": ["Standing Calf Raise - 4x15"]
+  "FullBody": {
+    "workouts": {
+      "Full A": [
+        { "name": "Squat", "muscle": "Quads" },
+        { "name": "Bench Press", "muscle": "Chest" },
+        { "name": "Row", "muscle": "Back" },
+        { "name": "Lateral Raise", "muscle": "Shoulders" },
+        { "name": "Curl", "muscle": "Biceps" },
+        { "name": "Triceps Pushdown", "muscle": "Triceps" }
+      ],
+      "Full B": [
+        { "name": "Deadlift", "muscle": "Back" },
+        { "name": "Overhead Press", "muscle": "Shoulders" },
+        { "name": "Pulldown", "muscle": "Back" },
+        { "name": "Leg Press", "muscle": "Quads" },
+        { "name": "Calf Raise", "muscle": "Calves" },
+        { "name": "Abs Wheel", "muscle": "Abs" }
+      ]
     }
   }
 }
