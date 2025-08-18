@@ -17,7 +17,7 @@ const convertVal = (val, toUnits) => {
   const n = Number(val);
   return toUnits === "kg" ? lbToKg(n) : kgToLb(n);
 };
-// Epley est 1RM
+// Epley estimated 1RM
 const e1RM = (w, r) => (Number(w) || 0) * (1 + (Number(r) || 0) / 30);
 
 // Persist
@@ -43,7 +43,7 @@ function initUI() {
   unitBtn.onclick = () => {
     const newUnits = state.units === "kg" ? "lb" : "kg";
 
-    // convert bodyweight log values to new unit
+    // convert bodyweight values
     state.bodyweight = state.bodyweight.map(x => ({
       date: x.date,
       weight: convertVal(x.weight, newUnits)
@@ -59,7 +59,7 @@ function initUI() {
     state.units = newUnits;
     save();
     unitBtn.textContent = newUnits;
-    renderExerciseCards(); // refresh placeholders
+    renderExerciseCards();
     renderCharts();
     alert(`Units switched to ${newUnits}.`);
   };
@@ -79,7 +79,6 @@ function initUI() {
     const text = await file.text();
     try {
       const imported = JSON.parse(text);
-      // simple sanity
       if (!imported || typeof imported !== "object") throw new Error("Invalid data");
       state = { ...state, ...imported };
       save();
@@ -110,7 +109,7 @@ function initUI() {
   let restInterval = null; let restLeft = 90;
   const restEl = document.getElementById("restTimer");
   document.getElementById("startRest").onclick = () => {
-    restLeft = 90; // seconds
+    restLeft = 90;
     restEl.textContent = `Rest: ${restLeft}s`;
     if (restInterval) clearInterval(restInterval);
     restInterval = setInterval(() => {
@@ -183,17 +182,13 @@ function renderExerciseCards() {
 
     const setWrap = document.createElement("div");
 
-    // existing logs today (show last set to help)
-    const todayLogs = (state.logs[nameKey] || []).filter(l => l.date === today());
     const lastEntry = (state.logs[nameKey] || [])[ (state.logs[nameKey]||[]).length - 1];
-
     const helper = document.createElement("div");
     helper.className = "small";
     helper.textContent = lastEntry
       ? `Last: ${lastEntry.weight}${state.units} x ${lastEntry.reps} on ${lastEntry.date}`
       : `No history yet.`;
 
-    // Set rows: create the planned number of sets
     for (let s = 1; s <= ex.sets; s++) {
       const row = document.createElement("div");
       row.className = "set-row";
@@ -205,7 +200,6 @@ function renderExerciseCards() {
       `;
       const [wInput, rInput, saveBtn, delBtn] = row.children;
 
-      // prefill with last set if helpful
       if (lastEntry) { wInput.value = lastEntry.weight; rInput.value = lastEntry.reps; }
 
       saveBtn.onclick = () => {
@@ -217,10 +211,9 @@ function renderExerciseCards() {
         save();
         helper.textContent = `Last: ${w}${state.units} x ${r} on ${today()}`;
         buildExercisePicker();
-        renderExerciseChart(); // if selected
+        renderExerciseChart();
       };
       delBtn.onclick = () => {
-        // delete the most recent set for this exercise (today)
         if (!state.logs[nameKey] || state.logs[nameKey].length === 0) return;
         state.logs[nameKey].pop();
         save();
@@ -244,17 +237,18 @@ function renderExerciseCards() {
 function buildExercisePicker() {
   const sel = document.getElementById("exercisePicker");
   sel.innerHTML = "";
-  const names = Object.keys(state.logs).sort();
+  const namesSet = new Set();
+
   if (selectedProgram != null && selectedDay != null) {
-    // prioritize current day's exercises
-    const todays = programs[selectedProgram].days[selectedDay].exercises.map(e => e.name);
-    todays.forEach(n => { const o = document.createElement("option"); o.value = n; o.textContent = n; sel.appendChild(o); });
+    programs[selectedProgram].days[selectedDay].exercises
+      .map(e => e.name).forEach(n => { namesSet.add(n); });
   }
-  // add everything else
-  names.forEach(n => {
-    if (![...sel.options].some(o => o.value === n)) {
-      const o = document.createElement("option"); o.value = n; o.textContent = n; sel.appendChild(o);
-    }
+  Object.keys(state.logs).forEach(n => namesSet.add(n));
+
+  Array.from(namesSet).sort().forEach(n => {
+    const o = document.createElement("option");
+    o.value = o.textContent = n;
+    sel.appendChild(o);
   });
 }
 
