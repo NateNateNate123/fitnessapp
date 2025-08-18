@@ -1,155 +1,26 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="viewport-fit=cover,width=device-width, initial-scale=1, maximum-scale=1" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="theme-color" content="#0b0b0f" />
-  <link rel="manifest" href="manifest.json" />
-  <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="styles.css" />
-  <title>Fitness</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FitnessApp</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div id="app" class="app">
-    <header class="nav">
-      <div class="nav-left">
-        <button id="btn-back" class="icon-btn" aria-label="Back" hidden>〈</button>
-      </div>
-      <div class="nav-title">Fitness</div>
-      <div class="nav-right">
-        <button id="btn-add" class="icon-btn" aria-label="Add" hidden>＋</button>
-      </div>
-    </header>
+  <header>
+    <h1>FitnessApp</h1>
+  </header>
 
-    <main id="view-root" class="view"></main>
+  <main>
+    <section id="program-select"></section>
+    <section id="day-select"></section>
+    <section id="exercise-list"></section>
+    <section id="progress-log"></section>
+  </main>
 
-    <nav class="tabbar safe-bottom">
-      <button data-tab="workouts" class="tab active">🏋️‍♂️<span>Workouts</span></button>
-      <button data-tab="library"  class="tab">📚<span>Library</span></button>
-      <button data-tab="log"      class="tab">📝<span>Log</span></button>
-      <button data-tab="stats"    class="tab">📈<span>Stats</span></button>
-      <button data-tab="settings" class="tab">⚙️<span>Settings</span></button>
-    </nav>
-  </div>
-
-  <template id="tpl-workouts">
-    <section class="stack">
-      <div class="card">
-        <h2 class="card-title">Choose Split</h2>
-        <div id="split-select" class="segmented"></div>
-      </div>
-
-      <div class="card">
-        <h2 class="card-title">This Week</h2>
-        <div id="workout-list" class="list"></div>
-      </div>
-
-      <div class="card">
-        <h2 class="card-title">Quick Start</h2>
-        <button class="btn primary" id="btn-quick-start">Start Empty Workout</button>
-      </div>
-    </section>
-  </template>
-
-  <template id="tpl-library">
-    <section class="stack">
-      <div class="card">
-        <input id="exercise-search" class="search" placeholder="Search exercises…" />
-        <div id="muscle-filter" class="chips"></div>
-      </div>
-      <div class="card">
-        <div id="exercise-list" class="list"></div>
-      </div>
-    </section>
-  </template>
-
-  <template id="tpl-log">
-    <section class="stack">
-      <div class="card">
-        <h2 class="card-title">Body Metrics</h2>
-        <form id="metrics-form" class="grid2">
-          <label>Body Weight
-            <input id="metric-weight" type="number" step="0.1" inputmode="decimal" placeholder="e.g. 180" />
-          </label>
-          <label>Body Fat %
-            <input id="metric-bf" type="number" step="0.1" inputmode="decimal" placeholder="e.g. 15" />
-          </label>
-          <button class="btn" id="btn-add-metric" type="button">Add Entry</button>
-        </form>
-      </div>
-
-      <div class="card">
-        <h2 class="card-title">History</h2>
-        <div id="history-list" class="list"></div>
-      </div>
-    </section>
-  </template>
-
-  <template id="tpl-stats">
-    <section class="stack">
-      <div class="card">
-        <h2 class="card-title">Progress</h2>
-        <canvas id="chart-weight" height="160"></canvas>
-        <canvas id="chart-bf" height="160" class="mt"></canvas>
-      </div>
-      <div class="card">
-        <h2 class="card-title">Streaks & PRs</h2>
-        <div id="streaks" class="streaks"></div>
-        <div id="prs" class="list"></div>
-      </div>
-    </section>
-  </template>
-
-  <template id="tpl-settings">
-    <section class="stack">
-      <div class="card">
-        <h2 class="card-title">Preferences</h2>
-        <div class="grid2">
-          <label class="switch-row">Units
-            <select id="unit-select">
-              <option value="imperial">Imperial (lb)</option>
-              <option value="metric">Metric (kg)</option>
-            </select>
-          </label>
-          <label class="switch-row">Rest Timer (sec)
-            <input id="rest-seconds" type="number" min="15" max="600" step="5" value="90" />
-          </label>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2 class="card-title">Data</h2>
-        <div class="grid2">
-          <button class="btn" id="btn-export">Export JSON</button>
-          <label class="btn">
-            <input id="file-import" type="file" accept="application/json" hidden />
-            Import JSON
-          </label>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2 class="card-title">About</h2>
-        <p class="muted">Offline-ready. Your data stays on your device. Add your own workouts or use the presets.</p>
-      </div>
-    </section>
-  </template>
-
-  <template id="tpl-session">
-    <section class="stack">
-      <div class="card">
-        <h2 class="card-title" id="session-title">Workout</h2>
-        <div id="session-sets" class="list"></div>
-        <div class="row gap">
-          <button id="btn-add-set" class="btn">＋ Set</button>
-          <button id="btn-rest" class="btn">⏱️ Rest</button>
-          <button id="btn-finish" class="btn primary">Finish</button>
-        </div>
-        <div id="timer" class="timer" hidden>00:00</div>
-      </div>
-    </section>
-  </template>
+  <footer>
+    <button id="log-body-btn">Log Bodyweight / Bodyfat</button>
+  </footer>
 
   <script src="app.js"></script>
 </body>
