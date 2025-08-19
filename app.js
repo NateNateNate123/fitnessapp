@@ -1,16 +1,15 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import "./style.css";
 
 /** ---------------------------
- * Local storage helpers
+ * Local storage keys & helpers
  * -------------------------- */
-const LS_KEYS = {
+const LS = {
   SETTINGS: "fitnessapp.settings",
-  ACTIVE: "fitnessapp.active", // { programId, dayKey }
-  WORKOUT_LOGS: "fitnessapp.logs", // [{date, programId, dayKey, entries:[{exercise, sets:[{weight, reps}]}]}]
-  BODY: "fitnessapp.body", // [{date, bodyWeight, bodyFat}]
+  ACTIVE: "fitnessapp.active",
+  LOGS: "fitnessapp.logs",
+  BODY: "fitnessapp.body",
 };
-
 const loadLS = (k, fallback) => {
   try {
     const v = JSON.parse(localStorage.getItem(k));
@@ -25,66 +24,76 @@ const saveLS = (k, v) => localStorage.setItem(k, JSON.stringify(v));
  * Unit helpers
  * -------------------------- */
 const round2 = (n) => Math.round(n * 100) / 100;
-const toKg = (lb) => round2(lb * 0.45359237);
-const toLb = (kg) => round2(kg / 0.45359237);
 
-function convertWeight(value, fromUnit, toUnit) {
-  if (value == null || value === "") return "";
-  const num = Number(value);
-  if (Number.isNaN(num)) return value;
-  if (fromUnit === toUnit) return num;
-  return fromUnit === "lb" ? toKg(num) : toLb(num);
+function parseSetsFromReps(reps) {
+  if (!reps) return null;
+  const s = String(reps);
+  const m = s.match(/(\d+)\s*[xX]/);
+  return m ? Number(m[1]) : null;
+}
+
+function dayKey(day) {
+  return (day?.day || "").replace(/\s+/g, "_").toLowerCase();
 }
 
 /** ---------------------------
- * App
+ * Main App
  * -------------------------- */
 export default function App() {
-  const [tab, setTab] = useState("workouts"); // workouts | today | log | stats | settings
-  const [programs, setPrograms] = useState(null);
+  const [tab, setTab] = useState("workouts"); // workouts | today | explore | log | stats | settings
+  const [programsData, setProgramsData] = useState(null);
   const [err, setErr] = useState("");
 
-  // settings
   const [settings, setSettings] = useState(
-    loadLS(LS_KEYS.SETTINGS, { units: "lb", accent: "#007aff" })
+    loadLS(LS.SETTINGS, {
+      units: "lb",
+      accent: "#007aff",
+      theme: "system", // system | light | dark
+      rest: 90, // default rest seconds
+    })
   );
-  useEffect(() => saveLS(LS_KEYS.SETTINGS, settings), [settings]);
+  useEffect(() => saveLS(LS.SETTINGS, settings), [settings]);
 
-  // active selection (program/day)
   const [active, setActive] = useState(
-    loadLS(LS_KEYS.ACTIVE, { programId: null, dayKey: null })
+    loadLS(LS.ACTIVE, { programId: null, dayKey: null })
   );
-  useEffect(() => saveLS(LS_KEYS.ACTIVE, active), [active]);
+  useEffect(() => saveLS(LS.ACTIVE, active), [active]);
 
-  // logs
-  const [logs, setLogs] = useState(loadLS(LS_KEYS.WORKOUT_LOGS, []));
-  useEffect(() => saveLS(LS_KEYS.WORKOUT_LOGS, logs), [logs]);
+  const [logs, setLogs] = useState(loadLS(LS.LOGS, []));
+  useEffect(() => saveLS(LS.LOGS, logs), [logs]);
 
-  // body data
-  const [body, setBody] = useState(loadLS(LS_KEYS.BODY, []));
-  useEffect(() => saveLS(LS_KEYS.BODY, body), [body]);
+  const [body, setBody] = useState(loadLS(LS.BODY, []));
+  useEffect(() => saveLS(LS.BODY, body), [body]);
 
-  // load programs.json from /public
+  // theme management
+  useEffect(() => {
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const theme =
+      settings.theme === "system" ? (prefersDark ? "dark" : "light") : settings.theme;
+    document.documentElement.dataset.theme = theme;
+  }, [settings.theme]);
+
+  // load programs
   useEffect(() => {
     (async () => {
       try {
         const res = await fetch("/programs.json", { cache: "no-store" });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
-        setPrograms(data);
+        setProgramsData(data);
       } catch (e) {
         setErr(
-          "Couldn't load programs.json. Make sure the file is in your /public folder."
+          "Couldn't load programs.json. Ensure it’s in your /public folder. (If your file is named programs_full.json, either rename it to programs.json or change the fetch path in App.js.)"
         );
       }
     })();
   }, []);
 
-  const activeProgram = useMemo(() => {
-    if (!programs || !programs.programs) return null;
-    return programs.programs.find((p) => p.id === active.programId) || null;
-  }, [programs, active.programId]);
-
+  const programs = programsData?.programs || [];
+  const activeProgram = useMemo(
+    () => programs.find((p) => p.id === active.programId) || null,
+    [programs, active.programId]
+  );
   const activeDay = useMemo(() => {
     if (!activeProgram) return null;
     return activeProgram.days.find((d) => dayKey(d) === active.dayKey) || null;
@@ -97,7 +106,7 @@ export default function App() {
 
         {tab === "workouts" && (
           <Workouts
-            programs={programs?.programs || []}
+            programs={programs}
             active={active}
             setActive={setActive}
             settings={settings}
@@ -109,12 +118,16 @@ export default function App() {
             activeProgram={activeProgram}
             activeDay={activeDay}
             settings={settings}
-            onStartBlank={() => setTab("workouts")}
             onSaveLog={(entry) => setLogs((prev) => [entry, ...prev])}
+            onPickProgram={() => setTab("workouts")}
           />
         )}
 
-        {tab === "log" && <Log logs={logs} settings={settings} />}
+        {tab === "explore" && (
+          <Explore programs={programs} units={settings.units} />
+        )}
+
+        {tab === "log" && <Log logs={logs} />}
 
         {tab === "stats" && (
           <Stats logs={logs} body={body} units={settings.units} />
@@ -126,6 +139,7 @@ export default function App() {
             setSettings={setSettings}
             body={body}
             setBody={setBody}
+            logs={logs}
           />
         )}
       </div>
@@ -136,75 +150,41 @@ export default function App() {
 }
 
 /** ---------------------------
- * Utility: unique day key
- * -------------------------- */
-function dayKey(day) {
-  // Use day title; if absent, hash by index in UI layer
-  return (day?.day || "").replace(/\s+/g, "_").toLowerCase();
-}
-
-/** ---------------------------
- * Tab Bar
+ * Tab bar
  * -------------------------- */
 function TabBar({ tab, setTab, accent }) {
   return (
     <div className="tab-bar" style={{ ["--accent"]: accent }}>
-      <button
-        className={tab === "workouts" ? "active" : ""}
-        onClick={() => setTab("workouts")}
-      >
-        Workouts
-      </button>
-      <button
-        className={tab === "today" ? "active" : ""}
-        onClick={() => setTab("today")}
-      >
-        Today
-      </button>
-      <button
-        className={tab === "log" ? "active" : ""}
-        onClick={() => setTab("log")}
-      >
-        Log
-      </button>
-      <button
-        className={tab === "stats" ? "active" : ""}
-        onClick={() => setTab("stats")}
-      >
-        Stats
-      </button>
-      <button
-        className={tab === "settings" ? "active" : ""}
-        onClick={() => setTab("settings")}
-      >
-        Settings
-      </button>
+      {["workouts", "today", "explore", "log", "stats", "settings"].map((t) => (
+        <button
+          key={t}
+          className={tab === t ? "active" : ""}
+          onClick={() => setTab(t)}
+        >
+          {t[0].toUpperCase() + t.slice(1)}
+        </button>
+      ))}
     </div>
   );
 }
 
 /** ---------------------------
- * Workouts tab
+ * Workouts (Program & Day picker)
  * -------------------------- */
 function Workouts({ programs, active, setActive, settings }) {
-  const [open, setOpen] = useState({}); // expand/collapse per day
+  const [open, setOpen] = useState({});
 
-  if (!programs.length) {
-    return <p>Loading programs…</p>;
-  }
+  if (!programs.length) return <p>Loading programs…</p>;
 
   return (
     <div>
       <h1>Programs</h1>
-
       {programs.map((p) => (
         <div className="card" key={p.id}>
           <div className="card-head">
             <h2>{p.name}</h2>
             <button
-              className={
-                active.programId === p.id ? "chip chip-active" : "chip"
-              }
+              className={active.programId === p.id ? "chip chip-active" : "chip"}
               onClick={() =>
                 setActive((prev) => ({
                   programId: p.id,
@@ -253,9 +233,7 @@ function Workouts({ programs, active, setActive, settings }) {
                     <div className="row-gap">
                       <button
                         className="ghost"
-                        onClick={() =>
-                          setActive({ programId: p.id, dayKey: k })
-                        }
+                        onClick={() => setActive({ programId: p.id, dayKey: k })}
                       >
                         Set as Today
                       </button>
@@ -273,7 +251,7 @@ function Workouts({ programs, active, setActive, settings }) {
                   {expanded && (
                     <ul className="exercise-list">
                       {d.exercises.map((ex, idx) => (
-                        <ExerciseRow key={idx} ex={ex} units={settings.units} />
+                        <ExerciseRow key={idx} ex={ex} />
                       ))}
                     </ul>
                   )}
@@ -287,12 +265,16 @@ function Workouts({ programs, active, setActive, settings }) {
   );
 }
 
-function ExerciseRow({ ex, units }) {
+function ExerciseRow({ ex }) {
   return (
     <li className="exercise-row">
       <div className="ex-head">
         <div className="ex-title">
-          <div className={`muscle-dot m-${(ex.muscle || "Other").split(" ")[0]}`}></div>
+          <div
+            className={`muscle-dot m-${(ex.muscle || "Other")
+              .split(" ")[0]
+              .replace(/[^a-z]/gi, "")}`}
+          ></div>
           <strong>{ex.name}</strong>
         </div>
         <div className="ex-meta">
@@ -312,43 +294,66 @@ function ExerciseRow({ ex, units }) {
 }
 
 /** ---------------------------
- * Today (Workout Flow)
+ * Today (guided workout flow + rest timer)
  * -------------------------- */
-function Today({ activeProgram, activeDay, settings, onStartBlank, onSaveLog }) {
+function Today({ activeProgram, activeDay, settings, onSaveLog, onPickProgram }) {
   const [idx, setIdx] = useState(0);
-  const [workingSets, setWorkingSets] = useState({}); // exerciseIndex -> [{weight, reps}]
+  const [workingSets, setWorkingSets] = useState({});
   const [saved, setSaved] = useState(false);
 
+  // rest timer
+  const [rest, setRest] = useState(settings.rest || 90);
+  const [left, setLeft] = useState(0);
+  const timerRef = useRef(null);
+
   useEffect(() => {
-    // reset when day changes
     setIdx(0);
     setWorkingSets({});
     setSaved(false);
+    stopTimer();
+    setLeft(0);
   }, [activeDay?.day]);
+
+  function startTimer(sec) {
+    const seconds = sec || rest;
+    clearInterval(timerRef.current);
+    setLeft(seconds);
+    timerRef.current = setInterval(() => {
+      setLeft((t) => {
+        if (t <= 1) {
+          clearInterval(timerRef.current);
+          // light haptic if supported
+          if (navigator.vibrate) navigator.vibrate([80, 80, 80]);
+          return 0;
+        }
+        return t - 1;
+      });
+    }, 1000);
+  }
+  function stopTimer() {
+    clearInterval(timerRef.current);
+    setLeft(0);
+  }
 
   if (!activeProgram || !activeDay) {
     return (
       <div className="empty">
         <p>No day selected.</p>
-        <button onClick={onStartBlank}>Choose a Program & Day</button>
+        <button onClick={onPickProgram}>Choose a Program & Day</button>
       </div>
     );
   }
 
   const ex = activeDay.exercises[idx];
   const total = activeDay.exercises.length;
-
   const setsTarget =
     (ex?.sets && Number(ex.sets)) || parseSetsFromReps(ex?.reps) || 3;
-
-  const currentSets = workingSets[idx] || Array.from({ length: setsTarget }, () => ({ weight: "", reps: "" }));
+  const currentSets =
+    workingSets[idx] || Array.from({ length: setsTarget }, () => ({ weight: "", reps: "" }));
 
   function updateSet(si, field, val) {
     const updated = [...currentSets];
-    updated[si] = {
-      ...updated[si],
-      [field]: val,
-    };
+    updated[si] = { ...updated[si], [field]: val };
     setWorkingSets((m) => ({ ...m, [idx]: updated }));
   }
 
@@ -361,11 +366,10 @@ function Today({ activeProgram, activeDay, settings, onStartBlank, onSaveLog }) 
 
   function saveWorkout() {
     const date = new Date().toISOString().slice(0, 10);
-    // convert all weights to current unit persisted
     const entry = {
       date,
       programId: activeProgram.id,
-      dayKey: (activeDay.day || "").replace(/\s+/g, "_").toLowerCase(),
+      dayKey: dayKey(activeDay),
       dayName: activeDay.day,
       units: settings.units,
       entries: Object.keys(workingSets).map((k) => {
@@ -401,7 +405,11 @@ function Today({ activeProgram, activeDay, settings, onStartBlank, onSaveLog }) 
 
         <div className="flow-exercise">
           <div className="ex-title big">
-            <div className={`muscle-dot m-${(ex?.muscle || "Other").split(" ")[0]}`}></div>
+            <div
+              className={`muscle-dot m-${(ex?.muscle || "Other")
+                .split(" ")[0]
+                .replace(/[^a-z]/gi, "")}`}
+            ></div>
             <strong>{ex?.name}</strong>
           </div>
           <div className="ex-meta big">
@@ -409,7 +417,6 @@ function Today({ activeProgram, activeDay, settings, onStartBlank, onSaveLog }) 
           </div>
 
           {ex?.notes && <div className="ex-notes">{ex.notes}</div>}
-
           {(ex?.warmup_sets || ex?.early_set_RPE || ex?.last_set_RPE) && (
             <div className="ex-warmups">
               {ex?.warmup_sets && <span>Warm-up: {ex.warmup_sets} sets</span>}
@@ -436,6 +443,13 @@ function Today({ activeProgram, activeDay, settings, onStartBlank, onSaveLog }) 
                   value={s.reps}
                   onChange={(e) => updateSet(si, "reps", e.target.value)}
                 />
+                <button
+                  className="ghost"
+                  onClick={() => startTimer()}
+                  title="Start rest timer"
+                >
+                  Rest
+                </button>
               </div>
             ))}
           </div>
@@ -444,7 +458,22 @@ function Today({ activeProgram, activeDay, settings, onStartBlank, onSaveLog }) 
             <button className="ghost" onClick={prevExercise} disabled={idx === 0}>
               Back
             </button>
-            <button className="ghost" onClick={nextExercise} disabled={idx === total - 1}>
+            <div className="row-gap">
+              <button className="ghost" onClick={() => startTimer(60)}>60s</button>
+              <button className="ghost" onClick={() => startTimer(90)}>90s</button>
+              <button className="ghost" onClick={() => startTimer(120)}>120s</button>
+              {left > 0 ? (
+                <span className="timer">{formatTime(left)}</span>
+              ) : (
+                <span className="timer muted">Ready</span>
+              )}
+              <button className="ghost" onClick={stopTimer}>Stop</button>
+            </div>
+            <button
+              className="ghost"
+              onClick={nextExercise}
+              disabled={idx === total - 1}
+            >
               Next
             </button>
           </div>
@@ -459,18 +488,109 @@ function Today({ activeProgram, activeDay, settings, onStartBlank, onSaveLog }) 
   );
 }
 
-function parseSetsFromReps(reps) {
-  if (!reps) return null;
-  // try patterns like "4x6-8"
-  const s = String(reps);
-  const m = s.match(/(\d+)\s*[xX]/);
-  return m ? Number(m[1]) : null;
+function formatTime(s) {
+  const m = Math.floor(s / 60);
+  const r = s % 60;
+  return `${m}:${String(r).padStart(2, "0")}`;
 }
 
 /** ---------------------------
- * Log tab
+ * Explore (search + filter)
  * -------------------------- */
-function Log({ logs, settings }) {
+function Explore({ programs, units }) {
+  const [q, setQ] = useState("");
+  const [muscle, setMuscle] = useState("All");
+
+  const allExercises = useMemo(() => {
+    const list = [];
+    programs.forEach((p) =>
+      p.days?.forEach((d) =>
+        d.exercises?.forEach((ex) =>
+          list.push({
+            programId: p.id,
+            dayName: d.day,
+            ...ex,
+          })
+        )
+      )
+    );
+    return list;
+  }, [programs]);
+
+  const muscles = useMemo(() => {
+    const mset = new Set(["All"]);
+    allExercises.forEach((e) => mset.add(e.muscle || "Other"));
+    return Array.from(mset);
+  }, [allExercises]);
+
+  const results = allExercises.filter((e) => {
+    const okMuscle = muscle === "All" || (e.muscle || "Other") === muscle;
+    const okQ =
+      !q ||
+      e.name.toLowerCase().includes(q.toLowerCase()) ||
+      (e.notes || "").toLowerCase().includes(q.toLowerCase());
+    return okMuscle && okQ;
+  });
+
+  return (
+    <div>
+      <h1>Explore</h1>
+      <div className="card">
+        <div className="row-gap">
+          <input
+            className="input"
+            placeholder="Search exercises…"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+          />
+          <select
+            className="input"
+            value={muscle}
+            onChange={(e) => setMuscle(e.target.value)}
+          >
+            {muscles.map((m) => (
+              <option key={m} value={m}>
+                {m}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div className="sub-card">
+        <ul className="exercise-list">
+          {results.map((ex, i) => (
+            <li className="exercise-row" key={i}>
+              <div className="ex-head">
+                <div className="ex-title">
+                  <div
+                    className={`muscle-dot m-${(ex.muscle || "Other")
+                      .split(" ")[0]
+                      .replace(/[^a-z]/gi, "")}`}
+                  ></div>
+                  <strong>{ex.name}</strong>
+                </div>
+                <div className="ex-meta">
+                  {ex.sets ? `${ex.sets} sets` : ""} {ex.reps ? `× ${ex.reps}` : ""}
+                </div>
+              </div>
+              <div className="muted">
+                {ex.dayName} • {ex.programId}
+              </div>
+              {ex.notes && <div className="ex-notes">{ex.notes}</div>}
+            </li>
+          ))}
+          {!results.length && <p className="muted">No results.</p>}
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+/** ---------------------------
+ * Log
+ * -------------------------- */
+function Log({ logs }) {
   if (!logs.length) return <p>No workouts logged yet.</p>;
   return (
     <div>
@@ -486,13 +606,17 @@ function Log({ logs, settings }) {
           {w.entries.map((e, j) => (
             <div className="log-ex" key={j}>
               <div className="ex-title">
-                <div className={`muscle-dot m-${(e.muscle || "Other").split(" ")[0]}`}></div>
+                <div
+                  className={`muscle-dot m-${(e.muscle || "Other")
+                    .split(" ")[0]
+                    .replace(/[^a-z]/gi, "")}`}
+                ></div>
                 <strong>{e.exercise}</strong>
               </div>
               <div className="set-list">
                 {e.sets.map((s, k) => (
                   <div className="pill" key={k}>
-                    {s.weight || "-"} {w.units} × {s.reps || "-"}
+                    {(s.weight || "-") + " " + (w.units || "lb")} × {s.reps || "-"}
                   </div>
                 ))}
               </div>
@@ -505,50 +629,122 @@ function Log({ logs, settings }) {
 }
 
 /** ---------------------------
- * Stats tab (simple summaries)
+ * Stats (canvas charts)
  * -------------------------- */
 function Stats({ logs, body, units }) {
-  // simple totals
-  const totalWorkouts = logs.length;
-  const lastWorkout = logs[0]?.date;
-
-  const lastBody = body[0];
   return (
     <div>
       <h1>Stats</h1>
       <div className="stats-grid">
-        <div className="stat">
-          <div className="stat-label">Total Workouts</div>
-          <div className="stat-value">{totalWorkouts}</div>
-        </div>
-        <div className="stat">
-          <div className="stat-label">Last Workout</div>
-          <div className="stat-value">{lastWorkout || "—"}</div>
-        </div>
-        <div className="stat">
-          <div className="stat-label">Latest Body Weight</div>
-          <div className="stat-value">
-            {lastBody?.bodyWeight ? `${lastBody.bodyWeight} ${units}` : "—"}
-          </div>
-        </div>
-        <div className="stat">
-          <div className="stat-label">Latest Body Fat</div>
-          <div className="stat-value">
-            {lastBody?.bodyFat ? `${lastBody.bodyFat}%` : "—"}
-          </div>
-        </div>
+        <StatCard label="Total Workouts" value={logs.length} />
+        <StatCard label="Last Workout" value={logs[0]?.date || "—"} />
       </div>
-      <p className="muted">
-        (Charts can be added later. All data is stored locally on your device.)
-      </p>
+
+      <ChartCard
+        title={`Body Weight (${units.toUpperCase()})`}
+        data={body
+          .filter((b) => b.bodyWeight)
+          .map((b) => ({ x: b.date, y: Number(b.bodyWeight) }))}
+      />
+      <ChartCard
+        title="Body Fat %"
+        data={body
+          .filter((b) => b.bodyFat)
+          .map((b) => ({ x: b.date, y: Number(b.bodyFat) }))}
+      />
+      <p className="muted">(Charts are local; no external libraries.)</p>
+    </div>
+  );
+}
+
+function StatCard({ label, value }) {
+  return (
+    <div className="stat">
+      <div className="stat-label">{label}</div>
+      <div className="stat-value">{value}</div>
+    </div>
+  );
+}
+
+function ChartCard({ title, data }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    const c = ref.current;
+    if (!c) return;
+    const ctx = c.getContext("2d");
+    const W = (c.width = c.offsetWidth * 2);
+    const H = (c.height = 160 * 2);
+    ctx.scale(2, 2);
+    ctx.clearRect(0, 0, W, H);
+
+    // frame
+    ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue(
+      "--border"
+    );
+    ctx.lineWidth = 1;
+    ctx.strokeRect(0.5, 0.5, W / 2 - 1, H / 2 - 1);
+
+    if (!data || data.length < 2) {
+      ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue(
+        "--muted"
+      );
+      ctx.font = "12px -apple-system, system-ui, sans-serif";
+      ctx.fillText("Not enough data", 10, 20);
+      return;
+    }
+
+    // sort by date
+    const points = [...data].sort((a, b) => (a.x > b.x ? 1 : -1));
+    const xs = points.map((p) => new Date(p.x).getTime());
+    const ys = points.map((p) => p.y);
+    const minX = Math.min(...xs),
+      maxX = Math.max(...xs);
+    const minY = Math.min(...ys),
+      maxY = Math.max(...ys);
+    const pad = 12;
+
+    const X = (t) =>
+      pad + ((t - minX) / Math.max(1, maxX - minX)) * (W / 2 - pad * 2);
+    const Y = (v) =>
+      pad + (1 - (v - minY) / Math.max(1, maxY - minY)) * (H / 2 - pad * 2);
+
+    // line
+    ctx.beginPath();
+    points.forEach((p, i) => {
+      const x = X(new Date(p.x).getTime());
+      const y = Y(p.y);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue(
+      "--accent"
+    );
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // dots
+    ctx.fillStyle = ctx.strokeStyle;
+    points.forEach((p) => {
+      const x = X(new Date(p.x).getTime());
+      const y = Y(p.y);
+      ctx.beginPath();
+      ctx.arc(x, y, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+    });
+  }, [data]);
+
+  return (
+    <div className="card">
+      <h2 style={{ marginBottom: 8 }}>{title}</h2>
+      <canvas ref={ref} style={{ width: "100%", height: 160 }} />
     </div>
   );
 }
 
 /** ---------------------------
- * Settings tab
+ * Settings (units, theme, body, export)
  * -------------------------- */
-function Settings({ settings, setSettings, body, setBody }) {
+function Settings({ settings, setSettings, body, setBody, logs }) {
   const [weight, setWeight] = useState("");
   const [fat, setFat] = useState("");
 
@@ -560,9 +756,73 @@ function Settings({ settings, setSettings, body, setBody }) {
     setFat("");
   }
 
+  function exportCSV() {
+    const rows = [];
+    rows.push(["TYPE", "DATE", "PROGRAM_ID", "DAY", "EXERCISE", "SET#", "WEIGHT", "REPS", "UNITS"]);
+    logs.forEach((w) => {
+      w.entries.forEach((e) => {
+        e.sets.forEach((s, idx) => {
+          rows.push([
+            "WORKOUT",
+            w.date,
+            w.programId,
+            w.dayName || w.dayKey,
+            e.exercise,
+            idx + 1,
+            s.weight || "",
+            s.reps || "",
+            w.units || "",
+          ]);
+        });
+      });
+    });
+    body.forEach((b) => {
+      rows.push(["BODY", b.date, "", "", "Body", "", b.bodyWeight || "", b.bodyFat || "", ""]);
+    });
+
+    const csv = rows.map((r) => r.map(escapeCSV).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `fitnessapp_export_${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div>
       <h1>Settings</h1>
+
+      <div className="card">
+        <h2>Appearance</h2>
+        <div className="row-gap">
+          {["system", "light", "dark"].map((t) => (
+            <button
+              key={t}
+              className={settings.theme === t ? "chip chip-active" : "chip"}
+              onClick={() => setSettings((s) => ({ ...s, theme: t }))}
+            >
+              {t[0].toUpperCase() + t.slice(1)}
+            </button>
+          ))}
+        </div>
+
+        <h2 style={{ marginTop: 12 }}>Accent Color</h2>
+        <div className="row-gap">
+          {["#007aff", "#34c759", "#ff3b30", "#5856d6", "#ff9500"].map((c) => (
+            <button
+              key={c}
+              className="swatch"
+              onClick={() => setSettings((s) => ({ ...s, accent: c }))}
+              style={{ background: c }}
+              title={c}
+            />
+          ))}
+        </div>
+      </div>
 
       <div className="card">
         <h2>Units</h2>
@@ -578,16 +838,16 @@ function Settings({ settings, setSettings, body, setBody }) {
           ))}
         </div>
 
-        <h2>Accent Color</h2>
+        <h2 style={{ marginTop: 12 }}>Default Rest Timer</h2>
         <div className="row-gap">
-          {["#007aff", "#34c759", "#ff3b30", "#5856d6", "#ff9500"].map((c) => (
+          {[60, 90, 120, 180].map((sec) => (
             <button
-              key={c}
-              className="swatch"
-              onClick={() => setSettings((s) => ({ ...s, accent: c }))}
-              style={{ background: c }}
-              title={c}
-            />
+              key={sec}
+              className={settings.rest === sec ? "chip chip-active" : "chip"}
+              onClick={() => setSettings((s) => ({ ...s, rest: sec }))}
+            >
+              {sec}s
+            </button>
           ))}
         </div>
       </div>
@@ -633,6 +893,21 @@ function Settings({ settings, setSettings, body, setBody }) {
           <p className="muted">No body entries yet.</p>
         )}
       </div>
+
+      <div className="card">
+        <h2>Data</h2>
+        <button className="primary" onClick={exportCSV}>
+          Export Logs & Body to CSV
+        </button>
+      </div>
     </div>
   );
+}
+
+function escapeCSV(val) {
+  const s = String(val ?? "");
+  if (s.includes(",") || s.includes('"') || s.includes("\n")) {
+    return `"${s.replace(/"/g, '""')}"`;
+  }
+  return s;
 }
