@@ -1,86 +1,131 @@
-/* iOS-style foundation */
+/* iOS-style base */
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; }
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro", "Helvetica Neue",
-    Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro", "Helvetica Neue", Arial, sans-serif;
   background: #f9f9fb;
   color: #111;
 }
 
-.app {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-}
+.app { display: flex; flex-direction: column; height: 100vh; }
+.content { flex: 1; overflow-y: auto; padding: 16px; }
 
-/* Content area above the tab bar */
-.content {
-  flex: 1;
-  overflow-y: auto;
+h1 { font-size: 24px; font-weight: 700; margin: 4px 0 12px; }
+h2 { font-size: 18px; margin: 0 0 6px; }
+h3 { font-size: 16px; margin: 0 0 4px; }
+.muted { color: #666; font-size: 12px; }
+
+/* Cards */
+.card {
+  background: #fff;
   padding: 16px;
+  margin: 12px 0 16px;
+  border-radius: 20px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+}
+.sub-card {
+  background: #f4f4f6;
+  padding: 12px;
+  margin: 10px 0;
+  border-radius: 16px;
 }
 
-/* iOS-style Tab Bar */
+/* Tab bar */
 .tab-bar {
   display: flex;
   justify-content: space-around;
   background: #fff;
-  border-top: 1px solid #ddd;
+  border-top: 1px solid #e6e6ea;
   padding: 10px 0;
   position: sticky;
   bottom: 0;
 }
-
 .tab-bar button {
-  background: none;
-  border: none;
-  font-size: 14px;
-  color: #555;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  cursor: pointer;
+  background: none; border: none; font-size: 14px; color: #555; cursor: pointer;
 }
+.tab-bar button.active { color: var(--accent, #007aff); font-weight: 600; }
 
-.tab-bar button.active {
-  color: #007aff; /* iOS blue */
-  font-weight: 600;
-}
+/* Buttons & inputs */
+button { border-radius: 12px; padding: 10px 14px; border: 1px solid #ddd; background: #fff; cursor: pointer; }
+button.primary { background: var(--accent, #007aff); color: #fff; border-color: transparent; }
+button.ghost { background: #f6f7f9; border: 1px solid #eaeaec; }
+button:disabled { opacity: 0.6; cursor: not-allowed; }
 
-/* Program & Exercise Cards */
-.card {
+.chip { border-radius: 999px; padding: 6px 12px; border: 1px solid #ddd; background: #fff; font-size: 12px; }
+.chip-active { background: var(--accent, #007aff); color: #fff; border-color: transparent; }
+
+.swatch { width: 28px; height: 28px; border-radius: 999px; border: none; cursor: pointer; }
+
+.input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid #ddd;
   background: #fff;
-  padding: 16px;
-  margin-bottom: 16px;
-  border-radius: 20px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  font-size: 14px;
 }
 
-.sub-card {
-  background: #f5f5f7;
-  padding: 12px;
-  margin: 10px 0;
-  border-radius: 14px;
-}
+.row-between { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.row-gap { display: flex; align-items: center; gap: 8px; }
+.divider { height: 1px; background: #eee; margin: 12px 0; }
 
-h1 {
-  font-size: 24px;
-  font-weight: 700;
-  margin-bottom: 12px;
-}
+.error { background: #ffe8e8; color: #a40000; padding: 10px 12px; border-radius: 10px; border: 1px solid #f3b3b3; margin-bottom: 12px; }
 
-h2 {
-  font-size: 20px;
-  margin-bottom: 8px;
-}
+/* Day & exercises */
+.day-list { margin-top: 8px; }
+.exercise-list { list-style: none; padding: 0; margin: 0; }
+.exercise-row { padding: 10px 10px 12px; background: #fff; margin: 8px 0; border: 1px solid #eee; border-radius: 12px; }
+.ex-head { display: flex; align-items: center; justify-content: space-between; }
+.ex-title { display: flex; align-items: center; gap: 8px; }
+.ex-title.big { font-size: 18px; }
+.ex-meta { color: #333; font-weight: 600; }
+.ex-meta.big { font-size: 14px; }
+.ex-notes { font-size: 13px; color: #555; margin-top: 6px; }
+.ex-warmups { display: flex; gap: 10px; flex-wrap: wrap; font-size: 12px; color: #666; margin-top: 6px; }
 
-h3 {
-  font-size: 16px;
-  margin-bottom: 6px;
-}
+/* Muscle color dot */
+.muscle-dot { width: 10px; height: 10px; border-radius: 999px; }
+.m-Chest { background: #ff5b5b; }
+.m-Back { background: #5b9dff; }
+.m-Quads { background: #7ed957; }
+.m-Hamstrings { background: #34c759; }
+.m-Glutes { background: #ff8a34; }
+.m-Shoulders { background: #ffd60a; }
+.m-Biceps { background: #b36bff; }
+.m-Triceps { background: #ff9ad5; }
+.m-Calves { background: #7a8a9a; }
+.m-Abs { background: #a1a1a6; }
+.m-Other, .m-Full { background: #c7c7cc; }
 
-.notes {
-  font-size: 12px;
-  color: #666;
-  margin-top: 4px;
+/* Flow */
+.flow-exercise { margin-top: 8px; }
+.sets-grid { display: grid; grid-template-columns: 1fr; gap: 8px; }
+.set-row { display: grid; grid-template-columns: 70px 1fr 1fr; gap: 8px; align-items: center; }
+.set-num { color: #666; }
+
+/* Log */
+.log-ex { margin: 10px 0; }
+.set-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.pill { background: #f1f2f6; border: 1px solid #e3e4ea; padding: 6px 10px; border-radius: 999px; font-size: 12px; }
+
+/* Stats */
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.stat { background: #fff; border: 1px solid #eee; border-radius: 14px; padding: 12px; }
+.stat-label { color: #666; font-size: 12px; }
+.stat-value { font-size: 20px; font-weight: 700; }
+
+/* Notes details */
+.notes-block summary { cursor: pointer; color: #111; font-weight: 600; margin-bottom: 6px; }
+.bulleted { margin: 0; padding-left: 18px; }
+
+/* Table */
+.table { width: 100%; margin-top: 10px; }
+.table-head, .table-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  padding: 8px 10px;
+  gap: 8px;
 }
+.table-head { background: #f1f1f4; border-radius: 10px; font-weight: 600; }
+.table-row { border-bottom: 1px solid #eee; }
