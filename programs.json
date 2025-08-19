@@ -1,87 +1,112 @@
 {
-  "user": { "units": "kg", "bodyweight": [], "bodyfat": [] },
+  "version": "1.0",
+  "source": "Derived from Jeff Nippard Pure Bodybuilding spreadsheets (Week 1)",
+  "units": ["lb", "kg"],
   "programs": [
     {
+      "id": "full_body",
       "name": "Full Body",
+      "program_notes": [
+        "Follow the prescribed RPE ranges.",
+        "Tempo and rest periods are suggested but can be adjusted based on recovery."
+      ],
+      "warmups": {
+        "general": [
+          { "instruction": "5–10 minutes light cardio", "reps": "1" },
+          { "instruction": "Dynamic stretching: hips, shoulders, thoracic spine" }
+        ],
+        "exercise_specific": [
+          { "label": "Squat", "instruction": "Do 2–3 lighter sets building up to your working weight" },
+          { "label": "Bench Press", "instruction": "Ramp up gradually with lighter sets" }
+        ]
+      },
+      "weak_points": [
+        { "weak_point": "Chest", "options": ["Incline Dumbbell Press", "Cable Fly"] },
+        { "weak_point": "Back", "options": ["Pull-ups", "Chest Supported Row"] }
+      ],
       "days": [
         {
-          "day": "Day 1",
+          "day": "Day 1 – Full Body A",
+          "type": "training",
           "exercises": [
-            { "name": "Barbell Squat", "muscle": "Legs", "sets": 4, "reps": "6-10" },
-            { "name": "Bench Press", "muscle": "Chest", "sets": 4, "reps": "6-10" },
-            { "name": "Barbell Row", "muscle": "Back", "sets": 4, "reps": "6-10" },
-            { "name": "Overhead Press", "muscle": "Shoulders", "sets": 3, "reps": "8-12" },
-            { "name": "Barbell Curl", "muscle": "Biceps", "sets": 3, "reps": "10-12" },
-            { "name": "Skullcrusher", "muscle": "Triceps", "sets": 3, "reps": "10-12" }
+            { "name": "Barbell Back Squat", "muscle": "Legs", "sets": 4, "reps": "6–8", "notes": "Full depth, progressive overload" },
+            { "name": "Barbell Bench Press", "muscle": "Chest", "sets": 4, "reps": "6–8", "notes": "Pause at chest" },
+            { "name": "Barbell Row", "muscle": "Back", "sets": 4, "reps": "8–10", "notes": "Controlled tempo" },
+            { "name": "Overhead Press", "muscle": "Shoulders", "sets": 3, "reps": "8–10" },
+            { "name": "Optional: Dumbbell Lateral Raise", "muscle": "Shoulders", "sets": 3, "reps": "12–15" }
           ]
         },
         {
-          "day": "Day 2",
+          "day": "Day 2 – Full Body B",
+          "type": "training",
           "exercises": [
-            { "name": "Deadlift", "muscle": "Back/Legs", "sets": 3, "reps": "4-6" },
-            { "name": "Incline Dumbbell Press", "muscle": "Chest", "sets": 3, "reps": "8-10" },
-            { "name": "Pull-Ups", "muscle": "Back", "sets": 3, "reps": "Max" },
-            { "name": "Lateral Raises", "muscle": "Shoulders", "sets": 3, "reps": "12-15" },
-            { "name": "Hammer Curls", "muscle": "Biceps", "sets": 3, "reps": "10-12" },
-            { "name": "Overhead Tricep Extension", "muscle": "Triceps", "sets": 3, "reps": "10-12" }
+            { "name": "Deadlift", "muscle": "Back", "sets": 3, "reps": "4–6", "notes": "RPE 7–8" },
+            { "name": "Incline Dumbbell Press", "muscle": "Chest", "sets": 4, "reps": "8–10" },
+            { "name": "Pull-ups", "muscle": "Back", "sets": 4, "reps": "6–8", "notes": "Weighted if possible" },
+            { "name": "Bulgarian Split Squat", "muscle": "Legs", "sets": 3, "reps": "10–12" },
+            { "name": "Face Pulls", "muscle": "Rear Delts", "sets": 3, "reps": "12–15" }
           ]
         }
       ]
     },
     {
+      "id": "ppl",
       "name": "Push Pull Legs",
       "days": [
         {
-          "day": "Push",
+          "day": "Day 1 – Push",
           "exercises": [
-            { "name": "Bench Press", "muscle": "Chest", "sets": 4, "reps": "6-10" },
-            { "name": "Overhead Press", "muscle": "Shoulders", "sets": 4, "reps": "6-10" },
-            { "name": "Incline Dumbbell Press", "muscle": "Chest", "sets": 3, "reps": "8-10" },
-            { "name": "Lateral Raises", "muscle": "Shoulders", "sets": 3, "reps": "12-15" },
-            { "name": "Skullcrushers", "muscle": "Triceps", "sets": 3, "reps": "10-12" }
+            { "name": "Barbell Bench Press", "muscle": "Chest", "sets": 4, "reps": "6–8" },
+            { "name": "Overhead Press", "muscle": "Shoulders", "sets": 3, "reps": "8–10" },
+            { "name": "Incline Dumbbell Press", "muscle": "Chest", "sets": 3, "reps": "8–10" },
+            { "name": "Dumbbell Lateral Raise", "muscle": "Shoulders", "sets": 3, "reps": "12–15" },
+            { "name": "Triceps Pushdown", "muscle": "Triceps", "sets": 3, "reps": "10–12" }
           ]
         },
         {
-          "day": "Pull",
+          "day": "Day 2 – Pull",
           "exercises": [
-            { "name": "Barbell Row", "muscle": "Back", "sets": 4, "reps": "6-10" },
-            { "name": "Pull-Ups", "muscle": "Back", "sets": 4, "reps": "Max" },
-            { "name": "Face Pulls", "muscle": "Rear Delts", "sets": 3, "reps": "12-15" },
-            { "name": "Barbell Curls", "muscle": "Biceps", "sets": 3, "reps": "10-12" },
-            { "name": "Hammer Curls", "muscle": "Biceps", "sets": 3, "reps": "10-12" }
+            { "name": "Barbell Row", "muscle": "Back", "sets": 4, "reps": "8–10" },
+            { "name": "Pull-ups", "muscle": "Back", "sets": 4, "reps": "6–8" },
+            { "name": "Face Pulls", "muscle": "Rear Delts", "sets": 3, "reps": "12–15" },
+            { "name": "Barbell Curl", "muscle": "Biceps", "sets": 3, "reps": "10–12" }
           ]
         },
         {
-          "day": "Legs",
+          "day": "Day 3 – Legs",
           "exercises": [
-            { "name": "Barbell Squat", "muscle": "Legs", "sets": 4, "reps": "6-10" },
-            { "name": "Romanian Deadlift", "muscle": "Hamstrings", "sets": 4, "reps": "6-10" },
-            { "name": "Leg Press", "muscle": "Quads/Glutes", "sets": 3, "reps": "8-12" },
-            { "name": "Calf Raises", "muscle": "Calves", "sets": 4, "reps": "12-15" }
+            { "name": "Barbell Back Squat", "muscle": "Legs", "sets": 4, "reps": "6–8" },
+            { "name": "Romanian Deadlift", "muscle": "Hamstrings", "sets": 3, "reps": "8–10" },
+            { "name": "Walking Lunges", "muscle": "Legs", "sets": 3, "reps": "12 steps each leg" },
+            { "name": "Leg Extension", "muscle": "Quads", "sets": 3, "reps": "12–15" },
+            { "name": "Standing Calf Raise", "muscle": "Calves", "sets": 4, "reps": "12–15" }
           ]
         }
       ]
     },
     {
+      "id": "upper_lower",
       "name": "Upper Lower",
       "days": [
         {
-          "day": "Upper",
+          "day": "Day 1 – Upper",
           "exercises": [
-            { "name": "Bench Press", "muscle": "Chest", "sets": 4, "reps": "6-10" },
-            { "name": "Barbell Row", "muscle": "Back", "sets": 4, "reps": "6-10" },
-            { "name": "Overhead Press", "muscle": "Shoulders", "sets": 3, "reps": "8-10" },
-            { "name": "Barbell Curl", "muscle": "Biceps", "sets": 3, "reps": "10-12" },
-            { "name": "Skullcrusher", "muscle": "Triceps", "sets": 3, "reps": "10-12" }
+            { "name": "Barbell Bench Press", "muscle": "Chest", "sets": 4, "reps": "6–8" },
+            { "name": "Barbell Row", "muscle": "Back", "sets": 4, "reps": "8–10" },
+            { "name": "Overhead Press", "muscle": "Shoulders", "sets": 3, "reps": "8–10" },
+            { "name": "Incline Dumbbell Press", "muscle": "Chest", "sets": 3, "reps": "8–10" },
+            { "name": "Barbell Curl", "muscle": "Biceps", "sets": 3, "reps": "10–12" },
+            { "name": "Triceps Pushdown", "muscle": "Triceps", "sets": 3, "reps": "10–12" }
           ]
         },
         {
-          "day": "Lower",
+          "day": "Day 2 – Lower",
           "exercises": [
-            { "name": "Squat", "muscle": "Legs", "sets": 4, "reps": "6-10" },
-            { "name": "Deadlift", "muscle": "Back/Legs", "sets": 3, "reps": "4-6" },
-            { "name": "Lunges", "muscle": "Legs", "sets": 3, "reps": "10-12 each leg" },
-            { "name": "Calf Raises", "muscle": "Calves", "sets": 4, "reps": "12-15" }
+            { "name": "Barbell Back Squat", "muscle": "Legs", "sets": 4, "reps": "6–8" },
+            { "name": "Romanian Deadlift", "muscle": "Hamstrings", "sets": 3, "reps": "8–10" },
+            { "name": "Walking Lunges", "muscle": "Legs", "sets": 3, "reps": "12 steps each leg" },
+            { "name": "Leg Curl", "muscle": "Hamstrings", "sets": 3, "reps": "10–12" },
+            { "name": "Standing Calf Raise", "muscle": "Calves", "sets": 4, "reps": "12–15" }
           ]
         }
       ]
