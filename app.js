@@ -1,5 +1,19 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import "./style.css";
+import React, { useEffect, useMemo, useRef, useState, createContext, useContext } from "react";
+import { createRoot } from "react-dom/client";
+import Chart from "chart.js/auto";
+
+/** ---------------------------
+ * Icons (Inline SVG to avoid dependencies)
+ * -------------------------- */
+const icons = {
+  Home: ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>),
+  Dumbbell: ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m14.4 14.4-1.8 1.8a2 2 0 0 1-2.8 0L9.4 13.4a2 2 0 0 1 0-2.8l1.8-1.8"/><path d="m16 2-3 3"/><path d="m21 7-3-3"/><path d="M3 15 2 16"/><path d="M8 20l-1 1"/><path d="m20 8-1 1"/><path d="m4 19-1 1"/></svg>),
+  ChartLine: ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>),
+  Settings: ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.08a2 2 0 0 1 1 1.73v.5a2 2 0 0 1-1 1.73l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.73v-.5a2 2 0 0 1 1-1.73l.15-.08a2 2 0 0 0 .73-2.73l-.22-.39a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>),
+  Plus: ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M5 12h14"/><path d="M12 5v14"/></svg>),
+  Trash: ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>),
+  X: ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>)
+};
 
 /** ---------------------------
  * Local storage keys & helpers
@@ -9,905 +23,1010 @@ const LS = {
   ACTIVE: "fitnessapp.active",
   LOGS: "fitnessapp.logs",
   BODY: "fitnessapp.body",
+  NUTRITION: "fitnessapp.nutrition",
 };
+
 const loadLS = (k, fallback) => {
   try {
     const v = JSON.parse(localStorage.getItem(k));
     return v ?? fallback;
-  } catch {
+  } catch (e) {
+    console.error(`Failed to load key '${k}' from local storage:`, e);
     return fallback;
   }
 };
-const saveLS = (k, v) => localStorage.setItem(k, JSON.stringify(v));
+
+const saveLS = (k, v) => {
+  try {
+    localStorage.setItem(k, JSON.stringify(v));
+  } catch (e) {
+    console.error(`Failed to save key '${k}' to local storage:`, e);
+  }
+};
+
+const today = new Date().toISOString().split('T')[0];
 
 /** ---------------------------
- * Unit helpers
+ * Programs Data
  * -------------------------- */
-const round2 = (n) => Math.round(n * 100) / 100;
-
-function parseSetsFromReps(reps) {
-  if (!reps) return null;
-  const s = String(reps);
-  const m = s.match(/(\d+)\s*[xX]/);
-  return m ? Number(m[1]) : null;
-}
-
-function dayKey(day) {
-  return (day?.day || "").replace(/\s+/g, "_").toLowerCase();
-}
+const PROGRAMS = {
+  "programs": [
+    {
+      "id": "full_body",
+      "name": "Full Body",
+      "program_notes": [
+        "Train 3x per week on non-consecutive days.",
+        "Rest at least 1 day between sessions.",
+        "The first two weeks are RPE ~7-8, after that push sets to RPE 9-10.",
+        "See the Hypertrophy Handbook for more details."
+      ],
+      "warmups": {
+        "general": [
+          "5-10 minutes light cardio (bike, jog, row)",
+          "Dynamic stretches (arm circles, leg swings)"
+        ],
+        "exercise_specific": [
+          "Do 1-2 lighter sets of each main lift before working sets."
+        ]
+      },
+      "weak_points": [
+        "If chest is weak: add extra set of Dumbbell Press.",
+        "If back is weak: add extra set of Barbell Rows."
+      ],
+      "days": [
+        {
+          "day": "Day 1 - Full Body A",
+          "type": "training",
+          "exercises": [
+            { "name": "Barbell Back Squat", "sets": 4, "reps": "6-8", "notes": "Focus on depth; keep core tight.", "muscle": "Quads" },
+            { "name": "Barbell Bench Press", "sets": 4, "reps": "6-8", "notes": "Pause 1s at chest, explosive press.", "muscle": "Chest" },
+            { "name": "Barbell Row", "sets": 4, "reps": "8-10", "notes": "Squeeze shoulder blades together.", "muscle": "Back" },
+            { "name": "Overhead Press", "sets": 3, "reps": "8-10", "notes": "Keep core tight, push head through at top.", "muscle": "Shoulders" },
+            { "name": "Dumbbell Bicep Curl", "sets": 3, "reps": "10-12", "notes": "Don’t swing weights.", "muscle": "Biceps" },
+            { "name": "Skullcrushers", "sets": 3, "reps": "10-12", "notes": "Keep elbows tucked.", "muscle": "Triceps" }
+          ]
+        },
+        {
+          "day": "Day 2 - Full Body B",
+          "type": "training",
+          "exercises": [
+            { "name": "Barbell Deadlift", "sets": 3, "reps": "5-6", "notes": "Maintain flat back, drive through heels.", "muscle": "Full Body" },
+            { "name": "Incline Dumbbell Press", "sets": 3, "reps": "8-10", "notes": "Get a good stretch at the bottom.", "muscle": "Chest" },
+            { "name": "Lat Pulldown", "sets": 3, "reps": "10-12", "notes": "Feel the stretch at the top, squeeze lats down.", "muscle": "Back" },
+            { "name": "Lateral Raises", "sets": 3, "reps": "12-15", "notes": "Lead with elbows, lift to shoulder height.", "muscle": "Shoulders" },
+            { "name": "Hammer Curl", "sets": 3, "reps": "8-10", "notes": "Keep palms facing each other.", "muscle": "Biceps" },
+            { "name": "Triceps Pressdown", "sets": 3, "reps": "10-12", "notes": "Full extension.", "muscle": "Triceps" }
+          ]
+        },
+        {
+          "day": "Day 3 - Full Body C",
+          "type": "training",
+          "exercises": [
+            { "name": "Leg Press", "sets": 3, "reps": "10-12", "notes": "Don’t lock knees at the top.", "muscle": "Quads" },
+            { "name": "Machine Chest Press", "sets": 3, "reps": "10-12", "notes": "Focus on muscle contraction.", "muscle": "Chest" },
+            { "name": "Seated Cable Row", "sets": 3, "reps": "10-12", "notes": "Pull with your back, not your arms.", "muscle": "Back" },
+            { "name": "Machine Shoulder Press", "sets": 3, "reps": "10-12", "notes": "Control the weight throughout the movement.", "muscle": "Shoulders" },
+            { "name": "Preacher Curl", "sets": 3, "reps": "10-12", "notes": "Keep arms fixed on the pad.", "muscle": "Biceps" },
+            { "name": "Overhead Triceps Extension", "sets": 3, "reps": "10-12", "notes": "Keep elbows close to your head.", "muscle": "Triceps" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "upper_lower",
+      "name": "Upper/Lower",
+      "program_notes": [
+        "Train 4x per week.",
+        "Upper/Lower split is effective for muscle growth and strength.",
+        "Most sets are taken to an RPE of 9-10 (0-1 reps shy of failure).",
+        "See the Hypertrophy Handbook for full details."
+      ],
+      "warmups": {
+        "general": [
+          "5-10 minutes light cardio (bike, jog, row)",
+          "Dynamic stretches (arm circles, leg swings)"
+        ],
+        "exercise_specific": [
+          "Do 1-2 lighter sets of each main lift before working sets."
+        ]
+      },
+      "weak_points": [
+        "Select a weak point from the Hypertrophy Handbook."
+      ],
+      "days": [
+        {
+          "day": "Day 1 - Upper",
+          "type": "training",
+          "exercises": [
+            { "name": "Barbell Bench Press", "sets": 4, "reps": "6-8", "notes": "Pause 1s at chest, explosive press.", "muscle": "Chest" },
+            { "name": "Lat Pulldown", "sets": 3, "reps": "10-12", "notes": "Squeeze lats at the bottom.", "muscle": "Back" },
+            { "name": "Incline Dumbbell Press", "sets": 3, "reps": "8-10", "notes": "Get a good stretch at the bottom.", "muscle": "Chest" },
+            { "name": "Seated Cable Row", "sets": 3, "reps": "10-12", "notes": "Pull with your back, not your arms.", "muscle": "Back" },
+            { "name": "Overhead Triceps Extension", "sets": 3, "reps": "10-12", "notes": "Keep elbows close to your head.", "muscle": "Triceps" },
+            { "name": "Dumbbell Bicep Curl", "sets": 3, "reps": "10-12", "notes": "Don't swing the weights.", "muscle": "Biceps" }
+          ]
+        },
+        {
+          "day": "Day 2 - Lower",
+          "type": "training",
+          "exercises": [
+            { "name": "Barbell Back Squat", "sets": 4, "reps": "6-8", "notes": "Parallel or deeper.", "muscle": "Quads" },
+            { "name": "Romanian Deadlift", "sets": 3, "reps": "8-10", "notes": "Stretch hamstrings at bottom.", "muscle": "Hamstrings" },
+            { "name": "Bulgarian Split Squats", "sets": 3, "reps": "10-12 each leg", "notes": "Drive through front heel.", "muscle": "Quads" },
+            { "name": "Leg Press", "sets": 3, "reps": "12-15", "notes": "Don’t lock knees.", "muscle": "Quads" },
+            { "name": "Standing Calf Raises", "sets": 3, "reps": "12-20", "notes": "Full stretch at bottom, squeeze at top.", "muscle": "Calves" }
+          ]
+        },
+        {
+          "day": "Day 3 - Upper",
+          "type": "training",
+          "exercises": [
+            { "name": "Overhead Press", "sets": 4, "reps": "6-8", "notes": "Push head through at top.", "muscle": "Shoulders" },
+            { "name": "Barbell Row", "sets": 4, "reps": "8-10", "notes": "Squeeze shoulder blades together.", "muscle": "Back" },
+            { "name": "Cable Crossover", "sets": 3, "reps": "12-15", "notes": "Feel the contraction in your chest.", "muscle": "Chest" },
+            { "name": "Pull-ups", "sets": 3, "reps": "Max Reps", "notes": "Use assistance if needed.", "muscle": "Back" },
+            { "name": "Close-Grip Triceps Pressdown", "sets": 3, "reps": "10-12", "notes": "Keep elbows fixed.", "muscle": "Triceps" },
+            { "name": "Incline Dumbbell Curl", "sets": 3, "reps": "10-12", "notes": "Emphasize stretch at bottom.", "muscle": "Biceps" }
+          ]
+        },
+        {
+          "day": "Day 4 - Lower",
+          "type": "training",
+          "exercises": [
+            { "name": "Leg Extension", "sets": 3, "reps": "12-15", "notes": "Squeeze quads hard at the top.", "muscle": "Quads" },
+            { "name": "Lying Leg Curl", "sets": 3, "reps": "10-12", "notes": "Get a full contraction on your hamstrings.", "muscle": "Hamstrings" },
+            { "name": "Calf Press on Leg Press", "sets": 3, "reps": "15-20", "notes": "Slow and controlled.", "muscle": "Calves" },
+            { "name": "Glute Bridges", "sets": 3, "reps": "15-20", "notes": "Squeeze glutes at the top.", "muscle": "Glutes" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ppl",
+      "name": "Push/Pull/Legs",
+      "program_notes": [
+        "Train 6x per week.",
+        "Most sets are taken to an RPE of 9-10 (0-1 reps shy of failure).",
+        "This is a 10-day asynchronous split.",
+        "See the Hypertrophy Handbook for full details."
+      ],
+      "warmups": {
+        "general": [
+          "5-10 minutes light cardio (bike, jog, row)",
+          "Dynamic stretches (arm circles, leg swings)"
+        ],
+        "exercise_specific": [
+          "Do 1-2 lighter sets of each main lift before working sets."
+        ]
+      },
+      "weak_points": [
+        "Select a weak point from the Hypertrophy Handbook."
+      ],
+      "days": [
+        {
+          "day": "Day 1 - Push",
+          "type": "training",
+          "exercises": [
+            { "name": "Barbell Bench Press", "sets": 4, "reps": "6-8", "notes": "Push to RPE 9-10.", "muscle": "Chest" },
+            { "name": "Incline Dumbbell Press", "sets": 3, "reps": "8-10", "notes": "Control the negative.", "muscle": "Chest" },
+            { "name": "Overhead Press", "sets": 3, "reps": "8-10", "notes": "Keep core tight.", "muscle": "Shoulders" },
+            { "name": "Lateral Raises", "sets": 3, "reps": "12-15", "notes": "Lift with elbows.", "muscle": "Shoulders" },
+            { "name": "Skullcrushers", "sets": 3, "reps": "10-12", "notes": "Keep elbows tucked.", "muscle": "Triceps" },
+            { "name": "Triceps Pressdown (Bar)", "sets": 2, "reps": "12-15", "notes": "Squeeze triceps at the bottom.", "muscle": "Triceps" }
+          ]
+        },
+        {
+          "day": "Day 2 - Pull",
+          "type": "training",
+          "exercises": [
+            { "name": "Barbell Row", "sets": 4, "reps": "6-8", "notes": "Explosive pull, controlled negative.", "muscle": "Back" },
+            { "name": "Lat Pulldown", "sets": 3, "reps": "10-12", "notes": "Get a full stretch at the top.", "muscle": "Back" },
+            { "name": "Seated Cable Row", "sets": 3, "reps": "10-12", "notes": "Pull with your back, not your arms.", "muscle": "Back" },
+            { "name": "Face Pulls", "sets": 3, "reps": "15-20", "notes": "Focus on external rotation.", "muscle": "Back" },
+            { "name": "Hammer Curl", "sets": 2, "reps": "12-15", "notes": "Keep palms facing each other.", "muscle": "Biceps" },
+            { "name": "Cable Curl", "sets": 2, "reps": "12-15", "notes": "Keep tension on the biceps.", "muscle": "Biceps" }
+          ]
+        },
+        {
+          "day": "Day 3 - Legs",
+          "type": "training",
+          "exercises": [
+            { "name": "Barbell Back Squat", "sets": 4, "reps": "6-8", "notes": "Parallel or deeper.", "muscle": "Quads" },
+            { "name": "Romanian Deadlift", "sets": 3, "reps": "8-10", "notes": "Stretch hamstrings at bottom.", "muscle": "Hamstrings" },
+            { "name": "Bulgarian Split Squats", "sets": 3, "reps": "10-12 each leg", "notes": "Drive through front heel.", "muscle": "Quads" },
+            { "name": "Leg Extension", "sets": 3, "reps": "12-15", "notes": "Squeeze quads hard.", "muscle": "Quads" },
+            { "name": "Standing Calf Raises", "sets": 3, "reps": "12-20", "notes": "Full stretch at bottom, squeeze at top.", "muscle": "Calves" }
+          ]
+        },
+        {
+          "day": "Day 4 - Rest",
+          "type": "rest",
+          "exercises": []
+        },
+        {
+          "day": "Day 5 - Push 2",
+          "type": "training",
+          "exercises": [
+            { "name": "Machine Chest Press", "sets": 4, "reps": "8-10", "notes": "Focus on the contraction.", "muscle": "Chest" },
+            { "name": "Decline Press", "sets": 3, "reps": "8-10", "notes": "Good for lower chest.", "muscle": "Chest" },
+            { "name": "Machine Shoulder Press", "sets": 3, "reps": "10-12", "notes": "Controlled movement.", "muscle": "Shoulders" },
+            { "name": "Lateral Raises (Machine)", "sets": 3, "reps": "12-15", "notes": "Isolation exercise.", "muscle": "Shoulders" },
+            { "name": "Triceps Diverging Pressdown", "sets": 2, "reps": "12-15", "notes": "Lean slightly forward, flare elbows out.", "muscle": "Triceps" },
+            { "name": "Reverse-Grip Cable Curl", "sets": 2, "reps": "12-15", "notes": "Works forearms, brachialis and biceps.", "muscle": "Biceps" }
+          ]
+        },
+        {
+          "day": "Day 6 - Pull 2",
+          "type": "training",
+          "exercises": [
+            { "name": "Pull-ups", "sets": 4, "reps": "Max Reps", "notes": "Use assistance if needed.", "muscle": "Back" },
+            { "name": "T-Bar Row", "sets": 3, "reps": "8-10", "notes": "Focus on the squeeze.", "muscle": "Back" },
+            { "name": "Single-Arm Dumbbell Row", "sets": 3, "reps": "10-12 each arm", "notes": "Controlled stretch at the bottom.", "muscle": "Back" },
+            { "name": "Shrugs", "sets": 3, "reps": "12-15", "notes": "Squeeze traps at the top.", "muscle": "Traps" },
+            { "name": "Preacher Curl", "sets": 2, "reps": "10-12", "notes": "Keep arms fixed on the pad.", "muscle": "Biceps" },
+            { "name": "Roman Chair Leg Raise", "sets": 2, "reps": "10-20", "notes": "Round lower back as you curl legs up.", "muscle": "Abs" }
+          ]
+        }
+      ]
+    }
+  ]
+};
 
 /** ---------------------------
- * Main App
+ * Local storage keys & helpers
+ * -------------------------- */
+const LS = {
+  SETTINGS: "fitnessapp.settings",
+  ACTIVE: "fitnessapp.active",
+  LOGS: "fitnessapp.logs",
+  BODY: "fitnessapp.body",
+  NUTRITION: "fitnessapp.nutrition",
+};
+
+const loadLS = (k, fallback) => {
+  try {
+    const v = JSON.parse(localStorage.getItem(k));
+    return v ?? fallback;
+  } catch (e) {
+    console.error(`Failed to load key '${k}' from local storage:`, e);
+    return fallback;
+  }
+};
+
+const saveLS = (k, v) => {
+  try {
+    localStorage.setItem(k, JSON.stringify(v));
+  } catch (e) {
+    console.error(`Failed to save key '${k}' to local storage:`, e);
+  }
+};
+
+const today = new Date().toISOString().split('T')[0];
+
+/** ---------------------------
+ * App Context
+ * -------------------------- */
+const AppContext = createContext();
+
+/** ---------------------------
+ * Root App Component
  * -------------------------- */
 export default function App() {
-  const [tab, setTab] = useState("workouts"); // workouts | today | explore | log | stats | settings
-  const [programsData, setProgramsData] = useState(null);
-  const [err, setErr] = useState("");
+  const [tab, setTab] = useState("workouts");
+  const [activeWorkout, setActiveWorkout] = useState(loadLS(LS.ACTIVE, null));
+  const [exerciseLogs, setExerciseLogs] = useState(loadLS(LS.LOGS, []));
+  const [bodyStats, setBodyStats] = useState(loadLS(LS.BODY, []));
+  const [nutrition, setNutrition] = useState(loadLS(LS.NUTRITION, {}));
+  const [settings, setSettings] = useState(loadLS(LS.SETTINGS, { units: "kg" }));
+  const [isDarkMode, setIsDarkMode] = useState(window.matchMedia('(prefers-color-scheme: dark)').matches);
 
-  const [settings, setSettings] = useState(
-    loadLS(LS.SETTINGS, {
-      units: "lb",
-      accent: "#007aff",
-      theme: "system", // system | light | dark
-      rest: 90, // default rest seconds
-    })
-  );
-  useEffect(() => saveLS(LS.SETTINGS, settings), [settings]);
-
-  const [active, setActive] = useState(
-    loadLS(LS.ACTIVE, { programId: null, dayKey: null })
-  );
-  useEffect(() => saveLS(LS.ACTIVE, active), [active]);
-
-  const [logs, setLogs] = useState(loadLS(LS.LOGS, []));
-  useEffect(() => saveLS(LS.LOGS, logs), [logs]);
-
-  const [body, setBody] = useState(loadLS(LS.BODY, []));
-  useEffect(() => saveLS(LS.BODY, body), [body]);
-
-  // theme management
+  useEffect(() => { saveLS(LS.ACTIVE, activeWorkout); }, [activeWorkout]);
+  useEffect(() => { saveLS(LS.LOGS, exerciseLogs); }, [exerciseLogs]);
+  useEffect(() => { saveLS(LS.BODY, bodyStats); }, [bodyStats]);
+  useEffect(() => { saveLS(LS.NUTRITION, nutrition); }, [nutrition]);
+  useEffect(() => { saveLS(LS.SETTINGS, settings); }, [settings]);
+  
+  // Handle dark mode setting
   useEffect(() => {
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const theme =
-      settings.theme === "system" ? (prefersDark ? "dark" : "light") : settings.theme;
-    document.documentElement.dataset.theme = theme;
-  }, [settings.theme]);
+    document.documentElement.classList.toggle('dark', isDarkMode);
+  }, [isDarkMode]);
 
-  // load programs
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch("/programs.json", { cache: "no-store" });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-        setProgramsData(data);
-      } catch (e) {
-        setErr(
-          "Couldn't load programs.json. Ensure it’s in your /public folder. (If your file is named programs_full.json, either rename it to programs.json or change the fetch path in App.js.)"
-        );
-      }
-    })();
-  }, []);
+  const handleWorkoutSelect = (programId, dayIndex) => {
+    const program = PROGRAMS.programs.find(p => p.id === programId);
+    if (!program) return;
+    const day = program.days[dayIndex];
+    if (day.type === "rest") {
+      alert("This is a rest day. Enjoy!");
+      return;
+    }
+    setActiveWorkout({
+      programId: programId,
+      day: day.day,
+      exercises: day.exercises.map(ex => ({ ...ex, sets: [] })),
+      activeExerciseIndex: 0
+    });
+    setTab("today");
+  };
 
-  const programs = programsData?.programs || [];
-  const activeProgram = useMemo(
-    () => programs.find((p) => p.id === active.programId) || null,
-    [programs, active.programId]
-  );
-  const activeDay = useMemo(() => {
-    if (!activeProgram) return null;
-    return activeProgram.days.find((d) => dayKey(d) === active.dayKey) || null;
-  }, [activeProgram, active.dayKey]);
+  const handleLogSet = (exerciseName, set) => {
+    const newLog = {
+      exercise: exerciseName,
+      weight: parseFloat(set.weight) || 0,
+      reps: parseInt(set.reps) || 0,
+      timestamp: Date.now(),
+      date: today
+    };
+    setExerciseLogs(prev => [...prev, newLog]);
+  };
+
+  const handleLogBodyStat = (weight, fat) => {
+    const newStat = {
+      bodyWeight: parseFloat(weight) || 0,
+      bodyFat: parseFloat(fat) || 0,
+      timestamp: Date.now(),
+      date: today
+    };
+    setBodyStats(prev => [...prev, newStat]);
+  };
+  
+  const handleLogNutrition = (entry) => {
+    const newNutrition = { ...nutrition };
+    if (!newNutrition[today]) newNutrition[today] = [];
+    newNutrition[today].push(entry);
+    setNutrition(newNutrition);
+  };
+  
+  const handleFinishWorkout = () => {
+    setActiveWorkout(null);
+    setTab("log");
+  };
+
+  const value = {
+    tab, setTab, programsData: PROGRAMS.programs, activeWorkout, setActiveWorkout, 
+    exerciseLogs, bodyStats, nutrition, settings, setSettings, isDarkMode, setIsDarkMode,
+    handleWorkoutSelect, handleLogSet, handleLogBodyStat, handleLogNutrition, handleFinishWorkout
+  };
 
   return (
-    <div className="app">
-      <div className="content">
-        {err && <div className="error">{err}</div>}
+    <AppContext.Provider value={value}>
+      <Layout />
+    </AppContext.Provider>
+  );
+}
 
-        {tab === "workouts" && (
-          <Workouts
-            programs={programs}
-            active={active}
-            setActive={setActive}
-            settings={settings}
-          />
-        )}
+// Main layout and navigation
+const Layout = () => {
+  const { tab, isDarkMode } = useContext(AppContext);
 
-        {tab === "today" && (
-          <Today
-            activeProgram={activeProgram}
-            activeDay={activeDay}
-            settings={settings}
-            onSaveLog={(entry) => setLogs((prev) => [entry, ...prev])}
-            onPickProgram={() => setTab("workouts")}
-          />
-        )}
+  const renderView = () => {
+    switch (tab) {
+      case "workouts": return <WorkoutsView />;
+      case "today": return <TodayView />;
+      case "log": return <LogView />;
+      case "stats": return <StatsView />;
+      case "nutrition": return <NutritionView />;
+      case "settings": return <SettingsView />;
+      default: return null;
+    }
+  };
 
-        {tab === "explore" && (
-          <Explore programs={programs} units={settings.units} />
-        )}
-
-        {tab === "log" && <Log logs={logs} />}
-
-        {tab === "stats" && (
-          <Stats logs={logs} body={body} units={settings.units} />
-        )}
-
-        {tab === "settings" && (
-          <Settings
-            settings={settings}
-            setSettings={setSettings}
-            body={body}
-            setBody={setBody}
-            logs={logs}
-          />
-        )}
+  return (
+    <div className="flex flex-col h-screen overflow-hidden">
+      <Header />
+      <div className="flex-1 overflow-y-auto p-4 md:p-6 pb-20">
+        {renderView()}
       </div>
-
-      <TabBar tab={tab} setTab={setTab} accent={settings.accent} />
+      <Navbar />
     </div>
   );
-}
+};
 
-/** ---------------------------
- * Tab bar
- * -------------------------- */
-function TabBar({ tab, setTab, accent }) {
+// --- Sub-Components ---
+const Header = () => (
+  <header className="bg-white/90 dark:bg-neutral-900/90 backdrop-blur-lg shadow-sm border-b border-gray-200 dark:border-neutral-800 p-4 sticky top-0 z-10 flex justify-center items-center">
+    <h1 className="text-xl font-bold">FitnessApp</h1>
+  </header>
+);
+
+const Navbar = () => {
+  const { tab, setTab } = useContext(AppContext);
+  const navItems = [
+    { id: "workouts", label: "Workouts", icon: icons.Home },
+    { id: "today", label: "Today", icon: icons.Dumbbell },
+    { id: "log", label: "Log", icon: icons.ChartLine },
+    { id: "nutrition", label: "Nutrition", icon: icons.Plus },
+    { id: "settings", label: "Settings", icon: icons.Settings },
+  ];
+
   return (
-    <div className="tab-bar" style={{ ["--accent"]: accent }}>
-      {["workouts", "today", "explore", "log", "stats", "settings"].map((t) => (
-        <button
-          key={t}
-          className={tab === t ? "active" : ""}
-          onClick={() => setTab(t)}
-        >
-          {t[0].toUpperCase() + t.slice(1)}
-        </button>
-      ))}
-    </div>
+    <nav className="fixed bottom-0 left-0 w-full bg-white/90 dark:bg-neutral-900/90 backdrop-blur-lg border-t border-gray-200 dark:border-neutral-800 py-2 safe-area-inset-bottom">
+      <div className="flex justify-around items-center max-w-xl mx-auto">
+        {navItems.map(item => (
+          <button
+            key={item.id}
+            onClick={() => setTab(item.id)}
+            className={`flex flex-col items-center justify-center p-2 rounded-xl transition-colors ${tab === item.id ? "text-blue-500" : "text-neutral-500"}`}
+          >
+            <item.icon className="h-6 w-6" />
+            <span className="text-xs mt-1 font-medium">{item.label}</span>
+          </button>
+        ))}
+      </div>
+    </nav>
   );
-}
+};
 
-/** ---------------------------
- * Workouts (Program & Day picker)
- * -------------------------- */
-function Workouts({ programs, active, setActive, settings }) {
-  const [open, setOpen] = useState({});
-
-  if (!programs.length) return <p>Loading programs…</p>;
+const WorkoutsView = () => {
+  const { programsData, handleWorkoutSelect } = useContext(AppContext);
 
   return (
-    <div>
-      <h1>Programs</h1>
-      {programs.map((p) => (
-        <div className="card" key={p.id}>
-          <div className="card-head">
-            <h2>{p.name}</h2>
-            <button
-              className={active.programId === p.id ? "chip chip-active" : "chip"}
-              onClick={() =>
-                setActive((prev) => ({
-                  programId: p.id,
-                  dayKey:
-                    p.days && p.days.length ? dayKey(p.days[0]) : prev.dayKey,
-                }))
-              }
-            >
-              {active.programId === p.id ? "Selected" : "Select"}
-            </button>
-          </div>
-
-          {p.program_notes?.length ? (
-            <details className="notes-block">
-              <summary>Program Notes</summary>
-              <ul className="bulleted">
-                {p.program_notes.map((n, i) => (
-                  <li key={i}>{n}</li>
-                ))}
-              </ul>
-            </details>
-          ) : null}
-
-          {p.warmups?.general?.length ? (
-            <details className="notes-block">
-              <summary>General Warm-Up</summary>
-              <ul className="bulleted">
-                {p.warmups.general.map((g, i) => (
-                  <li key={i}>
-                    {g.instruction}
-                    {g.reps ? ` — ${g.reps}` : ""}
-                  </li>
-                ))}
-              </ul>
-            </details>
-          ) : null}
-
-          <div className="day-list">
-            {p.days.map((d, i) => {
-              const k = dayKey(d) || `day_${i}`;
-              const expanded = !!open[k];
-              return (
-                <div className="sub-card" key={k}>
-                  <div className="row-between">
-                    <h3>{d.day || `Day ${i + 1}`}</h3>
-                    <div className="row-gap">
-                      <button
-                        className="ghost"
-                        onClick={() => setActive({ programId: p.id, dayKey: k })}
-                      >
-                        Set as Today
-                      </button>
-                      <button
-                        className="ghost"
-                        onClick={() =>
-                          setOpen((o) => ({ ...o, [k]: !expanded }))
-                        }
-                      >
-                        {expanded ? "Hide" : "Show"}
-                      </button>
-                    </div>
-                  </div>
-
-                  {expanded && (
-                    <ul className="exercise-list">
-                      {d.exercises.map((ex, idx) => (
-                        <ExerciseRow key={idx} ex={ex} />
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              );
-            })}
+    <div className="space-y-6">
+      {programsData.map(program => (
+        <div key={program.id} className="bg-white dark:bg-neutral-800 p-4 rounded-xl shadow-md space-y-4">
+          <h2 className="text-lg font-bold">{program.name}</h2>
+          <ul className="list-disc list-inside text-sm text-neutral-500 dark:text-neutral-400 space-y-1">
+            {program.program_notes.map((note, i) => (<li key={i}>{note}</li>))}
+          </ul>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {program.days.map((day, dayIndex) => (
+              <button
+                key={dayIndex}
+                onClick={() => handleWorkoutSelect(program.id, dayIndex)}
+                className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
+                  day.type === 'rest'
+                    ? 'bg-gray-200 dark:bg-neutral-700 text-neutral-500 cursor-not-allowed'
+                    : 'bg-blue-500 hover:bg-blue-600 text-white shadow'
+                }`}
+              >
+                {day.day}
+              </button>
+            ))}
           </div>
         </div>
       ))}
     </div>
   );
-}
+};
 
-function ExerciseRow({ ex }) {
-  return (
-    <li className="exercise-row">
-      <div className="ex-head">
-        <div className="ex-title">
-          <div
-            className={`muscle-dot m-${(ex.muscle || "Other")
-              .split(" ")[0]
-              .replace(/[^a-z]/gi, "")}`}
-          ></div>
-          <strong>{ex.name}</strong>
-        </div>
-        <div className="ex-meta">
-          {ex.sets ? `${ex.sets} sets` : ""} {ex.reps ? `× ${ex.reps}` : ""}
-        </div>
-      </div>
-      {ex.notes && <div className="ex-notes">{ex.notes}</div>}
-      {(ex.warmup_sets || ex.early_set_RPE || ex.last_set_RPE) && (
-        <div className="ex-warmups">
-          {ex.warmup_sets && <span>Warm-up: {ex.warmup_sets} sets</span>}
-          {ex.early_set_RPE && <span>Early RPE: {ex.early_set_RPE}</span>}
-          {ex.last_set_RPE && <span>Last RPE: {ex.last_set_RPE}</span>}
-        </div>
-      )}
-    </li>
-  );
-}
+const TodayView = () => {
+  const { activeWorkout, handleFinishWorkout, handleLogSet } = useContext(AppContext);
+  const [activeExerciseIndex, setActiveExerciseIndex] = useState(0);
 
-/** ---------------------------
- * Today (guided workout flow + rest timer)
- * -------------------------- */
-function Today({ activeProgram, activeDay, settings, onSaveLog, onPickProgram }) {
-  const [idx, setIdx] = useState(0);
-  const [workingSets, setWorkingSets] = useState({});
-  const [saved, setSaved] = useState(false);
+  if (!activeWorkout) {
+    return <p className="text-center text-neutral-500">Please select a workout from the "Workouts" tab.</p>;
+  }
 
-  // rest timer
-  const [rest, setRest] = useState(settings.rest || 90);
-  const [left, setLeft] = useState(0);
+  const activeExercise = activeWorkout.exercises[activeExerciseIndex];
+  const totalExercises = activeWorkout.exercises.length;
+  
+  const [restTime, setRestTime] = useState(0);
   const timerRef = useRef(null);
 
   useEffect(() => {
-    setIdx(0);
-    setWorkingSets({});
-    setSaved(false);
-    stopTimer();
-    setLeft(0);
-  }, [activeDay?.day]);
+    if (restTime > 0) {
+      timerRef.current = setInterval(() => {
+        setRestTime(t => t - 1);
+      }, 1000);
+    } else {
+      clearInterval(timerRef.current);
+    }
+    return () => clearInterval(timerRef.current);
+  }, [restTime]);
 
-  function startTimer(sec) {
-    const seconds = sec || rest;
-    clearInterval(timerRef.current);
-    setLeft(seconds);
-    timerRef.current = setInterval(() => {
-      setLeft((t) => {
-        if (t <= 1) {
-          clearInterval(timerRef.current);
-          // light haptic if supported
-          if (navigator.vibrate) navigator.vibrate([80, 80, 80]);
-          return 0;
-        }
-        return t - 1;
-      });
-    }, 1000);
-  }
-  function stopTimer() {
-    clearInterval(timerRef.current);
-    setLeft(0);
-  }
+  const handleNext = () => {
+    if (activeExerciseIndex < totalExercises - 1) {
+      setActiveExerciseIndex(prev => prev + 1);
+      setRestTime(0);
+    } else {
+      handleFinishWorkout();
+    }
+  };
 
-  if (!activeProgram || !activeDay) {
-    return (
-      <div className="empty">
-        <p>No day selected.</p>
-        <button onClick={onPickProgram}>Choose a Program & Day</button>
-      </div>
-    );
-  }
-
-  const ex = activeDay.exercises[idx];
-  const total = activeDay.exercises.length;
-  const setsTarget =
-    (ex?.sets && Number(ex.sets)) || parseSetsFromReps(ex?.reps) || 3;
-  const currentSets =
-    workingSets[idx] || Array.from({ length: setsTarget }, () => ({ weight: "", reps: "" }));
-
-  function updateSet(si, field, val) {
-    const updated = [...currentSets];
-    updated[si] = { ...updated[si], [field]: val };
-    setWorkingSets((m) => ({ ...m, [idx]: updated }));
-  }
-
-  function nextExercise() {
-    if (idx < total - 1) setIdx(idx + 1);
-  }
-  function prevExercise() {
-    if (idx > 0) setIdx(idx - 1);
-  }
-
-  function saveWorkout() {
-    const date = new Date().toISOString().slice(0, 10);
-    const entry = {
-      date,
-      programId: activeProgram.id,
-      dayKey: dayKey(activeDay),
-      dayName: activeDay.day,
-      units: settings.units,
-      entries: Object.keys(workingSets).map((k) => {
-        const i = Number(k);
-        const e = activeDay.exercises[i];
-        return {
-          exercise: e.name,
-          muscle: e.muscle || "Other",
-          sets: (workingSets[i] || []).map((s) => ({
-            weight: s.weight,
-            reps: s.reps,
-          })),
-        };
-      }),
-    };
-    onSaveLog(entry);
-    setSaved(true);
-  }
+  const handlePrevious = () => {
+    if (activeExerciseIndex > 0) {
+      setActiveExerciseIndex(prev => prev - 1);
+      setRestTime(0);
+    }
+  };
 
   return (
-    <div>
-      <h1>Today</h1>
-      <div className="card">
-        <div className="row-between">
-          <div>
-            <div className="muted">{activeProgram.name}</div>
-            <h2>{activeDay.day}</h2>
-          </div>
-          <div className="muted">
-            {idx + 1} / {total}
-          </div>
-        </div>
-
-        <div className="flow-exercise">
-          <div className="ex-title big">
-            <div
-              className={`muscle-dot m-${(ex?.muscle || "Other")
-                .split(" ")[0]
-                .replace(/[^a-z]/gi, "")}`}
-            ></div>
-            <strong>{ex?.name}</strong>
-          </div>
-          <div className="ex-meta big">
-            {ex?.sets ? `${ex.sets} sets` : ""} {ex?.reps ? `× ${ex.reps}` : ""}
-          </div>
-
-          {ex?.notes && <div className="ex-notes">{ex.notes}</div>}
-          {(ex?.warmup_sets || ex?.early_set_RPE || ex?.last_set_RPE) && (
-            <div className="ex-warmups">
-              {ex?.warmup_sets && <span>Warm-up: {ex.warmup_sets} sets</span>}
-              {ex?.early_set_RPE && <span>Early RPE: {ex.early_set_RPE}</span>}
-              {ex?.last_set_RPE && <span>Last RPE: {ex.last_set_RPE}</span>}
-            </div>
-          )}
-
-          <div className="sets-grid">
-            {currentSets.map((s, si) => (
-              <div className="set-row" key={si}>
-                <div className="set-num">Set {si + 1}</div>
-                <input
-                  className="input"
-                  inputMode="decimal"
-                  placeholder={`Weight (${settings.units})`}
-                  value={s.weight}
-                  onChange={(e) => updateSet(si, "weight", e.target.value)}
-                />
-                <input
-                  className="input"
-                  inputMode="numeric"
-                  placeholder="Reps"
-                  value={s.reps}
-                  onChange={(e) => updateSet(si, "reps", e.target.value)}
-                />
-                <button
-                  className="ghost"
-                  onClick={() => startTimer()}
-                  title="Start rest timer"
-                >
-                  Rest
-                </button>
-              </div>
-            ))}
-          </div>
-
-          <div className="row-between">
-            <button className="ghost" onClick={prevExercise} disabled={idx === 0}>
-              Back
-            </button>
-            <div className="row-gap">
-              <button className="ghost" onClick={() => startTimer(60)}>60s</button>
-              <button className="ghost" onClick={() => startTimer(90)}>90s</button>
-              <button className="ghost" onClick={() => startTimer(120)}>120s</button>
-              {left > 0 ? (
-                <span className="timer">{formatTime(left)}</span>
-              ) : (
-                <span className="timer muted">Ready</span>
-              )}
-              <button className="ghost" onClick={stopTimer}>Stop</button>
-            </div>
-            <button
-              className="ghost"
-              onClick={nextExercise}
-              disabled={idx === total - 1}
-            >
-              Next
-            </button>
-          </div>
-
-          <div className="divider" />
-          <button className="primary" onClick={saveWorkout} disabled={saved}>
-            {saved ? "Saved" : "Save Workout"}
-          </button>
-        </div>
+    <div className="space-y-6">
+      <div className="bg-white dark:bg-neutral-800 p-4 rounded-xl shadow-md">
+        <h2 className="text-lg font-bold">{activeWorkout.day}</h2>
+        <p className="text-sm text-neutral-500 dark:text-neutral-400">
+          Exercise {activeExerciseIndex + 1} of {totalExercises}
+        </p>
       </div>
+      
+      {activeExercise && (
+        <WorkoutSession
+          exercise={activeExercise}
+          onNext={handleNext}
+          onPrevious={handlePrevious}
+          isFirst={activeExerciseIndex === 0}
+          isLast={activeExerciseIndex === totalExercises - 1}
+          restTime={restTime}
+          setRestTime={setRestTime}
+        />
+      )}
     </div>
   );
-}
+};
 
-function formatTime(s) {
-  const m = Math.floor(s / 60);
-  const r = s % 60;
-  return `${m}:${String(r).padStart(2, "0")}`;
-}
+const WorkoutSession = ({ exercise, onNext, onPrevious, isFirst, isLast, restTime, setRestTime }) => {
+  const { handleLogSet } = useContext(AppContext);
+  const [sets, setSets] = useState(Array(exercise.sets).fill({ weight: "", reps: "" }));
 
-/** ---------------------------
- * Explore (search + filter)
- * -------------------------- */
-function Explore({ programs, units }) {
-  const [q, setQ] = useState("");
-  const [muscle, setMuscle] = useState("All");
-
-  const allExercises = useMemo(() => {
-    const list = [];
-    programs.forEach((p) =>
-      p.days?.forEach((d) =>
-        d.exercises?.forEach((ex) =>
-          list.push({
-            programId: p.id,
-            dayName: d.day,
-            ...ex,
-          })
-        )
-      )
-    );
-    return list;
-  }, [programs]);
-
-  const muscles = useMemo(() => {
-    const mset = new Set(["All"]);
-    allExercises.forEach((e) => mset.add(e.muscle || "Other"));
-    return Array.from(mset);
-  }, [allExercises]);
-
-  const results = allExercises.filter((e) => {
-    const okMuscle = muscle === "All" || (e.muscle || "Other") === muscle;
-    const okQ =
-      !q ||
-      e.name.toLowerCase().includes(q.toLowerCase()) ||
-      (e.notes || "").toLowerCase().includes(q.toLowerCase());
-    return okMuscle && okQ;
-  });
-
+  const handleLog = (setIndex) => {
+    if (sets[setIndex].reps && sets[setIndex].weight) {
+      handleLogSet(exercise.name, sets[setIndex]);
+      setRestTime(90); // Start 90s rest timer
+    }
+  };
+  
+  const handleSetChange = (setIndex, field, value) => {
+      const newSets = [...sets];
+      newSets[setIndex] = { ...newSets[setIndex], [field]: value };
+      setSets(newSets);
+  };
+  
   return (
-    <div>
-      <h1>Explore</h1>
-      <div className="card">
-        <div className="row-gap">
+    <div className="bg-white dark:bg-neutral-800 p-4 rounded-xl shadow-md space-y-4">
+      <h3 className="text-xl font-bold">{exercise.name}</h3>
+      <p className="text-sm text-neutral-500 dark:text-neutral-400">{exercise.notes}</p>
+      
+      {restTime > 0 ? (
+        <div className="text-center p-4 bg-blue-500/10 text-blue-500 rounded-lg font-semibold">
+          Resting: {restTime}s
+        </div>
+      ) : (
+        <div className="text-center p-4 bg-green-500/10 text-green-500 rounded-lg font-semibold">
+          Ready to go!
+        </div>
+      )}
+      
+      {sets.map((set, setIndex) => (
+        <div key={setIndex} className="grid grid-cols-4 gap-2 items-center">
+          <span className="text-sm text-neutral-500">Set {setIndex + 1}</span>
           <input
-            className="input"
-            placeholder="Search exercises…"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
+            type="number"
+            placeholder="Weight"
+            value={set.weight}
+            onChange={(e) => handleSetChange(setIndex, "weight", e.target.value)}
+            className="col-span-1 w-full px-3 py-2 rounded-lg bg-neutral-100 dark:bg-neutral-700 border border-gray-200 dark:border-neutral-700 text-neutral-900 dark:text-neutral-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
-          <select
-            className="input"
-            value={muscle}
-            onChange={(e) => setMuscle(e.target.value)}
+          <input
+            type="number"
+            placeholder="Reps"
+            value={set.reps}
+            onChange={(e) => handleSetChange(setIndex, "reps", e.target.value)}
+            className="col-span-1 w-full px-3 py-2 rounded-lg bg-neutral-100 dark:bg-neutral-700 border border-gray-200 dark:border-neutral-700 text-neutral-900 dark:text-neutral-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <button
+            onClick={() => handleLog(setIndex)}
+            className="py-2 px-2 rounded-lg font-medium text-white bg-blue-500 hover:bg-blue-600 transition-colors"
           >
-            {muscles.map((m) => (
-              <option key={m} value={m}>
-                {m}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      <div className="sub-card">
-        <ul className="exercise-list">
-          {results.map((ex, i) => (
-            <li className="exercise-row" key={i}>
-              <div className="ex-head">
-                <div className="ex-title">
-                  <div
-                    className={`muscle-dot m-${(ex.muscle || "Other")
-                      .split(" ")[0]
-                      .replace(/[^a-z]/gi, "")}`}
-                  ></div>
-                  <strong>{ex.name}</strong>
-                </div>
-                <div className="ex-meta">
-                  {ex.sets ? `${ex.sets} sets` : ""} {ex.reps ? `× ${ex.reps}` : ""}
-                </div>
-              </div>
-              <div className="muted">
-                {ex.dayName} • {ex.programId}
-              </div>
-              {ex.notes && <div className="ex-notes">{ex.notes}</div>}
-            </li>
-          ))}
-          {!results.length && <p className="muted">No results.</p>}
-        </ul>
-      </div>
-    </div>
-  );
-}
-
-/** ---------------------------
- * Log
- * -------------------------- */
-function Log({ logs }) {
-  if (!logs.length) return <p>No workouts logged yet.</p>;
-  return (
-    <div>
-      <h1>Workout Log</h1>
-      {logs.map((w, i) => (
-        <div className="card" key={i}>
-          <div className="row-between">
-            <h2>
-              {w.date} — {w.dayName || w.dayKey}
-            </h2>
-            <span className="muted">{w.programId}</span>
-          </div>
-          {w.entries.map((e, j) => (
-            <div className="log-ex" key={j}>
-              <div className="ex-title">
-                <div
-                  className={`muscle-dot m-${(e.muscle || "Other")
-                    .split(" ")[0]
-                    .replace(/[^a-z]/gi, "")}`}
-                ></div>
-                <strong>{e.exercise}</strong>
-              </div>
-              <div className="set-list">
-                {e.sets.map((s, k) => (
-                  <div className="pill" key={k}>
-                    {(s.weight || "-") + " " + (w.units || "lb")} × {s.reps || "-"}
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
+            Log
+          </button>
         </div>
       ))}
-    </div>
-  );
-}
-
-/** ---------------------------
- * Stats (canvas charts)
- * -------------------------- */
-function Stats({ logs, body, units }) {
-  return (
-    <div>
-      <h1>Stats</h1>
-      <div className="stats-grid">
-        <StatCard label="Total Workouts" value={logs.length} />
-        <StatCard label="Last Workout" value={logs[0]?.date || "—"} />
-      </div>
-
-      <ChartCard
-        title={`Body Weight (${units.toUpperCase()})`}
-        data={body
-          .filter((b) => b.bodyWeight)
-          .map((b) => ({ x: b.date, y: Number(b.bodyWeight) }))}
-      />
-      <ChartCard
-        title="Body Fat %"
-        data={body
-          .filter((b) => b.bodyFat)
-          .map((b) => ({ x: b.date, y: Number(b.bodyFat) }))}
-      />
-      <p className="muted">(Charts are local; no external libraries.)</p>
-    </div>
-  );
-}
-
-function StatCard({ label, value }) {
-  return (
-    <div className="stat">
-      <div className="stat-label">{label}</div>
-      <div className="stat-value">{value}</div>
-    </div>
-  );
-}
-
-function ChartCard({ title, data }) {
-  const ref = useRef(null);
-  useEffect(() => {
-    const c = ref.current;
-    if (!c) return;
-    const ctx = c.getContext("2d");
-    const W = (c.width = c.offsetWidth * 2);
-    const H = (c.height = 160 * 2);
-    ctx.scale(2, 2);
-    ctx.clearRect(0, 0, W, H);
-
-    // frame
-    ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue(
-      "--border"
-    );
-    ctx.lineWidth = 1;
-    ctx.strokeRect(0.5, 0.5, W / 2 - 1, H / 2 - 1);
-
-    if (!data || data.length < 2) {
-      ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue(
-        "--muted"
-      );
-      ctx.font = "12px -apple-system, system-ui, sans-serif";
-      ctx.fillText("Not enough data", 10, 20);
-      return;
-    }
-
-    // sort by date
-    const points = [...data].sort((a, b) => (a.x > b.x ? 1 : -1));
-    const xs = points.map((p) => new Date(p.x).getTime());
-    const ys = points.map((p) => p.y);
-    const minX = Math.min(...xs),
-      maxX = Math.max(...xs);
-    const minY = Math.min(...ys),
-      maxY = Math.max(...ys);
-    const pad = 12;
-
-    const X = (t) =>
-      pad + ((t - minX) / Math.max(1, maxX - minX)) * (W / 2 - pad * 2);
-    const Y = (v) =>
-      pad + (1 - (v - minY) / Math.max(1, maxY - minY)) * (H / 2 - pad * 2);
-
-    // line
-    ctx.beginPath();
-    points.forEach((p, i) => {
-      const x = X(new Date(p.x).getTime());
-      const y = Y(p.y);
-      if (i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
-    });
-    ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue(
-      "--accent"
-    );
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // dots
-    ctx.fillStyle = ctx.strokeStyle;
-    points.forEach((p) => {
-      const x = X(new Date(p.x).getTime());
-      const y = Y(p.y);
-      ctx.beginPath();
-      ctx.arc(x, y, 2.5, 0, Math.PI * 2);
-      ctx.fill();
-    });
-  }, [data]);
-
-  return (
-    <div className="card">
-      <h2 style={{ marginBottom: 8 }}>{title}</h2>
-      <canvas ref={ref} style={{ width: "100%", height: 160 }} />
-    </div>
-  );
-}
-
-/** ---------------------------
- * Settings (units, theme, body, export)
- * -------------------------- */
-function Settings({ settings, setSettings, body, setBody, logs }) {
-  const [weight, setWeight] = useState("");
-  const [fat, setFat] = useState("");
-
-  function addBody() {
-    if (!weight && !fat) return;
-    const date = new Date().toISOString().slice(0, 10);
-    setBody((prev) => [{ date, bodyWeight: weight || "", bodyFat: fat || "" }, ...prev]);
-    setWeight("");
-    setFat("");
-  }
-
-  function exportCSV() {
-    const rows = [];
-    rows.push(["TYPE", "DATE", "PROGRAM_ID", "DAY", "EXERCISE", "SET#", "WEIGHT", "REPS", "UNITS"]);
-    logs.forEach((w) => {
-      w.entries.forEach((e) => {
-        e.sets.forEach((s, idx) => {
-          rows.push([
-            "WORKOUT",
-            w.date,
-            w.programId,
-            w.dayName || w.dayKey,
-            e.exercise,
-            idx + 1,
-            s.weight || "",
-            s.reps || "",
-            w.units || "",
-          ]);
-        });
-      });
-    });
-    body.forEach((b) => {
-      rows.push(["BODY", b.date, "", "", "Body", "", b.bodyWeight || "", b.bodyFat || "", ""]);
-    });
-
-    const csv = rows.map((r) => r.map(escapeCSV).join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `fitnessapp_export_${new Date().toISOString().slice(0,10)}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  }
-
-  return (
-    <div>
-      <h1>Settings</h1>
-
-      <div className="card">
-        <h2>Appearance</h2>
-        <div className="row-gap">
-          {["system", "light", "dark"].map((t) => (
-            <button
-              key={t}
-              className={settings.theme === t ? "chip chip-active" : "chip"}
-              onClick={() => setSettings((s) => ({ ...s, theme: t }))}
-            >
-              {t[0].toUpperCase() + t.slice(1)}
-            </button>
-          ))}
-        </div>
-
-        <h2 style={{ marginTop: 12 }}>Accent Color</h2>
-        <div className="row-gap">
-          {["#007aff", "#34c759", "#ff3b30", "#5856d6", "#ff9500"].map((c) => (
-            <button
-              key={c}
-              className="swatch"
-              onClick={() => setSettings((s) => ({ ...s, accent: c }))}
-              style={{ background: c }}
-              title={c}
-            />
-          ))}
-        </div>
-      </div>
-
-      <div className="card">
-        <h2>Units</h2>
-        <div className="row-gap">
-          {["lb", "kg"].map((u) => (
-            <button
-              key={u}
-              className={settings.units === u ? "chip chip-active" : "chip"}
-              onClick={() => setSettings((s) => ({ ...s, units: u }))}
-            >
-              {u.toUpperCase()}
-            </button>
-          ))}
-        </div>
-
-        <h2 style={{ marginTop: 12 }}>Default Rest Timer</h2>
-        <div className="row-gap">
-          {[60, 90, 120, 180].map((sec) => (
-            <button
-              key={sec}
-              className={settings.rest === sec ? "chip chip-active" : "chip"}
-              onClick={() => setSettings((s) => ({ ...s, rest: sec }))}
-            >
-              {sec}s
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="card">
-        <h2>Body Tracking</h2>
-        <div className="set-row">
-          <input
-            className="input"
-            inputMode="decimal"
-            placeholder={`Body Weight (${settings.units})`}
-            value={weight}
-            onChange={(e) => setWeight(e.target.value)}
-          />
-          <input
-            className="input"
-            inputMode="decimal"
-            placeholder="Body Fat %"
-            value={fat}
-            onChange={(e) => setFat(e.target.value)}
-          />
-          <button className="primary" onClick={addBody}>
-            Add
-          </button>
-        </div>
-
-        {body.length ? (
-          <div className="table">
-            <div className="table-head">
-              <div>Date</div>
-              <div>Body Weight ({settings.units})</div>
-              <div>Body Fat %</div>
-            </div>
-            {body.map((b, i) => (
-              <div className="table-row" key={i}>
-                <div>{b.date}</div>
-                <div>{b.bodyWeight || "—"}</div>
-                <div>{b.bodyFat || "—"}</div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="muted">No body entries yet.</p>
-        )}
-      </div>
-
-      <div className="card">
-        <h2>Data</h2>
-        <button className="primary" onClick={exportCSV}>
-          Export Logs & Body to CSV
+      
+      <div className="flex justify-between mt-4">
+        <button
+          onClick={onPrevious}
+          disabled={isFirst}
+          className="py-2 px-4 rounded-lg bg-neutral-100 dark:bg-neutral-700 text-neutral-900 dark:text-neutral-50 font-medium disabled:opacity-50"
+        >
+          Previous
+        </button>
+        <button
+          onClick={onNext}
+          className="py-2 px-4 rounded-lg bg-blue-500 hover:bg-blue-600 text-white font-medium"
+        >
+          {isLast ? "Finish Workout" : "Next Exercise"}
         </button>
       </div>
     </div>
   );
-}
+};
 
-function escapeCSV(val) {
-  const s = String(val ?? "");
-  if (s.includes(",") || s.includes('"') || s.includes("\n")) {
-    return `"${s.replace(/"/g, '""')}"`;
-  }
-  return s;
-}
+const NutritionView = () => {
+    const { nutrition, handleLogNutrition } = useContext(AppContext);
+    const [food, setFood] = useState("");
+    const [calories, setCalories] = useState("");
+    const [protein, setProtein] = useState("");
+    const [carbs, setCarbs] = useState("");
+    const [fat, setFat] = useState("");
+    
+    const handleLog = () => {
+      if (!food || !calories) {
+        alert("Food and calories are required.");
+        return;
+      }
+      const newEntry = {
+        food: food,
+        calories: parseFloat(calories) || 0,
+        protein: parseFloat(protein) || 0,
+        carbs: parseFloat(carbs) || 0,
+        fat: parseFloat(fat) || 0,
+        timestamp: Date.now(),
+      };
+      handleLogNutrition(newEntry);
+      setFood("");
+      setCalories("");
+      setProtein("");
+      setCarbs("");
+      setFat("");
+    };
+    
+    const dailyEntries = useMemo(() => {
+        return nutrition[today] || [];
+    }, [nutrition]);
+    
+    const totals = useMemo(() => {
+        return dailyEntries.reduce((acc, entry) => {
+            acc.calories += entry.calories;
+            acc.protein += entry.protein;
+            acc.carbs += entry.carbs;
+            acc.fat += entry.fat;
+            return acc;
+        }, {calories: 0, protein: 0, carbs: 0, fat: 0});
+    }, [dailyEntries]);
+    
+    return (
+        <div className="space-y-6">
+            <div className="bg-white dark:bg-neutral-800 p-4 rounded-xl shadow-md space-y-4">
+                <h2 className="text-lg font-bold">Log Food for Today</h2>
+                <input
+                    type="text"
+                    placeholder="Food Item"
+                    value={food}
+                    onChange={(e) => setFood(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg bg-neutral-100 dark:bg-neutral-700 text-neutral-900 dark:text-neutral-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <div className="grid grid-cols-2 gap-2">
+                    <input type="number" placeholder="Calories" value={calories} onChange={(e) => setCalories(e.target.value)} className="px-3 py-2 rounded-lg bg-neutral-100 dark:bg-neutral-700 text-neutral-900 dark:text-neutral-50 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    <input type="number" placeholder="Protein (g)" value={protein} onChange={(e) => setProtein(e.target.value)} className="px-3 py-2 rounded-lg bg-neutral-100 dark:bg-neutral-700 text-neutral-900 dark:text-neutral-50 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    <input type="number" placeholder="Carbs (g)" value={carbs} onChange={(e) => setCarbs(e.target.value)} className="px-3 py-2 rounded-lg bg-neutral-100 dark:bg-neutral-700 text-neutral-900 dark:text-neutral-50 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    <input type="number" placeholder="Fat (g)" value={fat} onChange={(e) => setFat(e.target.value)} className="px-3 py-2 rounded-lg bg-neutral-100 dark:bg-neutral-700 text-neutral-900 dark:text-neutral-50 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+                <button onClick={handleLog} className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 rounded-lg transition-colors">Log Food</button>
+            </div>
+            
+            <div className="bg-white dark:bg-neutral-800 p-4 rounded-xl shadow-md space-y-4">
+                <h2 className="text-lg font-bold">Daily Totals</h2>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-neutral-500">
+                    <div><p className="text-xl font-bold text-neutral-900 dark:text-neutral-50">{totals.calories}</p><p>Calories</p></div>
+                    <div><p className="text-xl font-bold text-neutral-900 dark:text-neutral-50">{totals.protein}g</p><p>Protein</p></div>
+                    <div><p className="text-xl font-bold text-neutral-900 dark:text-neutral-50">{totals.carbs}g</p><p>Carbs</p></div>
+                    <div><p className="text-xl font-bold text-neutral-900 dark:text-neutral-50">{totals.fat}g</p><p>Fat</p></div>
+                </div>
+                
+                <h3 className="text-lg font-semibold mt-4">Entries</h3>
+                {dailyEntries.length > 0 ? (
+                    <ul className="space-y-2">
+                        {dailyEntries.map((entry, i) => (
+                            <li key={i} className="flex justify-between items-center bg-neutral-100 dark:bg-neutral-700 p-3 rounded-lg">
+                                <span className="font-medium">{entry.food}</span>
+                                <span className="text-sm text-neutral-500">{entry.calories} cal</span>
+                            </li>
+                        ))}
+                    </ul>
+                ) : (
+                    <p className="text-sm text-neutral-500">No food logged for today.</p>
+                )}
+            </div>
+        </div>
+    );
+};
+
+const LogView = () => {
+  const { exerciseLogs, bodyStats, settings } = useContext(AppContext);
+  const sortedLogs = useMemo(() => {
+    return [...exerciseLogs].sort((a,b) => b.timestamp - a.timestamp);
+  }, [exerciseLogs]);
+  const sortedBodyStats = useMemo(() => {
+      return [...bodyStats].sort((a,b) => b.timestamp - a.timestamp);
+  }, [bodyStats]);
+  
+  return (
+    <div className="space-y-6">
+      <div className="bg-white dark:bg-neutral-800 p-4 rounded-xl shadow-md">
+        <h2 className="text-lg font-bold mb-2">Workout Log</h2>
+        {sortedLogs.length === 0 ? (
+          <p className="text-neutral-500 text-sm">No exercise logs yet.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-neutral-200 dark:divide-neutral-700">
+              <thead className="bg-neutral-50 dark:bg-neutral-700">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-300 uppercase tracking-wider">Date</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-300 uppercase tracking-wider">Exercise</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-300 uppercase tracking-wider">Details</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white dark:bg-neutral-800 divide-y divide-neutral-200 dark:divide-neutral-700">
+                {sortedLogs.map((log, i) => (
+                  <tr key={i}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-900 dark:text-neutral-50">{log.date}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-900 dark:text-neutral-50">{log.exercise}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-900 dark:text-neutral-50">
+                      {log.reps} reps @ {log.weight}{settings.units}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      <div className="bg-white dark:bg-neutral-800 p-4 rounded-xl shadow-md">
+        <h2 className="text-lg font-bold mb-2">Body Stats</h2>
+        {sortedBodyStats.length === 0 ? (
+          <p className="text-neutral-500 text-sm">No body stats yet.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-neutral-200 dark:divide-neutral-700">
+              <thead className="bg-neutral-50 dark:bg-neutral-700">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-300 uppercase tracking-wider">Date</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-300 uppercase tracking-wider">Weight</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-300 uppercase tracking-wider">Fat %</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white dark:bg-neutral-800 divide-y divide-neutral-200 dark:divide-neutral-700">
+                {sortedBodyStats.map((stat, i) => (
+                  <tr key={i}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-900 dark:text-neutral-50">{stat.date}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-900 dark:text-neutral-50">{stat.bodyWeight}{settings.units}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-900 dark:text-neutral-50">{stat.bodyFat || '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const StatsView = () => {
+    const { bodyStats, exerciseLogs, settings } = useContext(AppContext);
+    const weightChartRef = useRef(null);
+    const fatChartRef = useRef(null);
+
+    const sortedBodyStats = useMemo(() => {
+      return [...bodyStats].sort((a,b) => a.timestamp - b.timestamp);
+    }, [bodyStats]);
+    
+    // Total stats
+    const totalWorkouts = useMemo(() => {
+        const dates = new Set(exerciseLogs.map(log => log.date));
+        return dates.size;
+    }, [exerciseLogs]);
+
+    const totalSets = exerciseLogs.length;
+
+    useEffect(() => {
+        if (!bodyStats || bodyStats.length < 2) return;
+        
+        const dates = sortedBodyStats.map(d => d.date);
+        const weights = sortedBodyStats.map(d => d.bodyWeight);
+        const fats = sortedBodyStats.map(d => d.bodyFat);
+
+        // Destroy previous charts to prevent conflicts
+        if (weightChartRef.current) weightChartRef.current.destroy();
+        if (fatChartRef.current) fatChartRef.current.destroy();
+
+        const weightCtx = document.getElementById("weightChart").getContext("2d");
+        const fatCtx = document.getElementById("fatChart").getContext("2d");
+
+        weightChartRef.current = new Chart(weightCtx, {
+            type: "line",
+            data: {
+                labels: dates,
+                datasets: [{
+                    label: `Body Weight (${settings.units})`,
+                    data: weights,
+                    borderColor: "rgb(59, 130, 246)",
+                    tension: 0.4,
+                    pointBackgroundColor: "rgb(59, 130, 246)",
+                }],
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { ticks: { color: "rgb(156, 163, 175)" }, grid: { color: "rgba(156, 163, 175, 0.2)" } },
+                    y: { ticks: { color: "rgb(156, 163, 175)" }, grid: { color: "rgba(156, 163, 175, 0.2)" } },
+                }
+            }
+        });
+
+        fatChartRef.current = new Chart(fatCtx, {
+            type: "line",
+            data: {
+                labels: dates,
+                datasets: [{
+                    label: "Body Fat %",
+                    data: fats,
+                    borderColor: "rgb(251, 146, 60)",
+                    tension: 0.4,
+                    pointBackgroundColor: "rgb(251, 146, 60)",
+                }],
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { ticks: { color: "rgb(156, 163, 175)" }, grid: { color: "rgba(156, 163, 175, 0.2)" } },
+                    y: { ticks: { color: "rgb(156, 163, 175)" }, grid: { color: "rgba(156, 163, 175, 0.2)" } },
+                }
+            }
+        });
+        
+        return () => {
+            if (weightChartRef.current) weightChartRef.current.destroy();
+            if (fatChartRef.current) fatChartRef.current.destroy();
+        };
+
+    }, [sortedBodyStats, settings.units]);
+    
+    return (
+        <div className="space-y-6">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-white dark:bg-neutral-800 p-4 rounded-xl shadow-md text-center">
+                  <p className="text-3xl font-bold text-blue-500">{totalWorkouts}</p>
+                  <p className="text-neutral-500 text-sm">Workouts</p>
+              </div>
+              <div className="bg-white dark:bg-neutral-800 p-4 rounded-xl shadow-md text-center">
+                  <p className="text-3xl font-bold text-blue-500">{totalSets}</p>
+                  <p className="text-neutral-500 text-sm">Total Sets</p>
+              </div>
+            </div>
+            
+            <div className="bg-white dark:bg-neutral-800 p-4 rounded-xl shadow-md">
+                <h2 className="text-lg font-bold mb-2">Body Weight Trend</h2>
+                {bodyStats.length > 1 ? (
+                    <canvas id="weightChart" className="w-full"></canvas>
+                ) : (
+                    <p className="text-neutral-500 text-sm text-center">Log at least 2 body weight entries to see a chart.</p>
+                )}
+            </div>
+
+            <div className="bg-white dark:bg-neutral-800 p-4 rounded-xl shadow-md">
+                <h2 className="text-lg font-bold mb-2">Body Fat Trend</h2>
+                {bodyStats.filter(s => s.bodyFat).length > 1 ? (
+                    <canvas id="fatChart" className="w-full"></canvas>
+                ) : (
+                    <p className="text-neutral-500 text-sm text-center">Log at least 2 body fat entries to see a chart.</p>
+                )}
+            </div>
+        </div>
+    );
+};
+
+const SettingsView = () => {
+  const { settings, setSettings, handleLogBodyStat } = useContext(AppContext);
+  const [weight, setWeight] = useState("");
+  const [fat, setFat] = useState("");
+
+  const handleLog = () => {
+    if (weight) {
+      handleLogBodyStat(weight, fat);
+      setWeight("");
+      setFat("");
+    }
+  };
+  
+  const handleExportData = () => {
+    const data = {
+      exerciseLogs: loadLS(LS.LOGS, []),
+      bodyStats: loadLS(LS.BODY, []),
+      nutrition: loadLS(LS.NUTRITION, {}),
+      settings: loadLS(LS.SETTINGS, {})
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `fitness_data_${new Date().toISOString().split('T')[0]}.json`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+  
+  const handleImportData = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const importedData = JSON.parse(event.target.result);
+        if (importedData.exerciseLogs) saveLS(LS.LOGS, importedData.exerciseLogs);
+        if (importedData.bodyStats) saveLS(LS.BODY, importedData.bodyStats);
+        if (importedData.nutrition) saveLS(LS.NUTRITION, importedData.nutrition);
+        if (importedData.settings) saveLS(LS.SETTINGS, importedData.settings);
+        window.location.reload(); // Reload to reflect changes
+      } catch (error) {
+        alert("Failed to import data. Please check the file format.");
+        console.error("Error importing data:", error);
+      }
+    };
+    reader.readAsText(file);
+  };
+
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-white dark:bg-neutral-800 p-4 rounded-xl shadow-md">
+        <h2 className="text-lg font-bold mb-2">Units</h2>
+        <div className="flex space-x-2">
+          <button
+            onClick={() => setSettings(prev => ({ ...prev, units: "kg" }))}
+            className={`py-2 px-4 rounded-full font-medium transition-colors ${settings.units === "kg" ? "bg-blue-500 text-white" : "bg-neutral-100 dark:bg-neutral-700 text-neutral-900 dark:text-neutral-50"}`}
+          >
+            Kilograms
+          </button>
+          <button
+            onClick={() => setSettings(prev => ({ ...prev, units: "lb" }))}
+            className={`py-2 px-4 rounded-full font-medium transition-colors ${settings.units === "lb" ? "bg-blue-500 text-white" : "bg-neutral-100 dark:bg-neutral-700 text-neutral-900 dark:text-neutral-50"}`}
+          >
+            Pounds
+          </button>
+        </div>
+      </div>
+      
+      <div className="bg-white dark:bg-neutral-800 p-4 rounded-xl shadow-md">
+        <h2 className="text-lg font-bold mb-2">Body Stats</h2>
+        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 mb-2">
+          <input
+            type="number"
+            placeholder={`Body Weight (${settings.units})`}
+            value={weight}
+            onChange={(e) => setWeight(e.target.value)}
+            className="flex-1 px-3 py-2 rounded-lg bg-neutral-100 dark:bg-neutral-700 text-neutral-900 dark:text-neutral-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <input
+            type="number"
+            placeholder="Body Fat %"
+            value={fat}
+            onChange={(e) => setFat(e.target.value)}
+            className="flex-1 px-3 py-2 rounded-lg bg-neutral-100 dark:bg-neutral-700 text-neutral-900 dark:text-neutral-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <button
+          onClick={handleLog}
+          className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 rounded-lg transition-colors"
+        >
+          Add Body Stat
+        </button>
+      </div>
+
+      <div className="bg-white dark:bg-neutral-800 p-4 rounded-xl shadow-md">
+        <h2 className="text-lg font-bold mb-2">Data Management</h2>
+        <div className="flex space-x-2">
+          <button
+            onClick={handleExportData}
+            className="flex-1 bg-neutral-100 dark:bg-neutral-700 text-neutral-900 dark:text-neutral-50 py-2 rounded-lg transition-colors"
+          >
+            Export to JSON
+          </button>
+          <label className="flex-1 text-center bg-neutral-100 dark:bg-neutral-700 text-neutral-900 dark:text-neutral-50 py-2 rounded-lg cursor-pointer transition-colors">
+            Import from JSON
+            <input type="file" onChange={handleImportData} accept=".json" hidden />
+          </label>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Start the app
+const container = document.getElementById("root");
+const root = createRoot(container);
+root.render(<App />);
